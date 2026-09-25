@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2038 - Hyperlocal Store</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f4f6f8; color: #1a1a1a; padding-bottom: 90px; }
+    
+    header { background: #0c831f; color: white; padding: 16px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
+    .brand { font-size: 24px; font-weight: 800; letter-spacing: 1px; }
+    .pincode-pill { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    
+    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
+    
+    /* Modals & Cards */
+    .card-box { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-box input, .card-box textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin: 8px 0; outline: none; }
+    .btn-primary { width: 100%; background: #0c831f; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; }
+    .btn-secondary { width: 100%; background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 8px; }
+    
+    /* Product Grid */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .product-card { background: white; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #eee; }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .card-unit { font-size: 12px; color: #666; margin-bottom: 12px; }
+    .card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+    .card-price { font-weight: 800; font-size: 16px; }
+    .btn-add { background: #fff; border: 1px solid #0c831f; color: #0c831f; font-weight: 700; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+    .btn-add:hover { background: #0c831f; color: white; }
+
+    /* Floating Cart Bar */
+    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0c831f; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; cursor: pointer; z-index: 20; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); }
+    
+    /* Success Screen */
+    .success-badge { background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 8px; font-weight: 600; text-align: center; margin-bottom: 16px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">2038</div>
+    <div class="pincode-pill" id="pincodePill" onclick="showPincodeModal()">Deliver to: Select Pincode</div>
+  </header>
+
+  <div class="container">
+    
+    <!-- 1. Pincode Check Screen -->
+    <div class="card-box" id="pincodeSection">
+      <h3>Check Delivery Availability</h3>
+      <p style="font-size: 13px; color: #666; margin-top: 4px;">Enter your area pin code to browse 2038 store</p>
+      <input type="text" id="pincodeInput" placeholder="Enter 6-digit Pincode (e.g. 812001)" maxlength="6" />
+      <button class="btn-primary" onclick="verifyPincode()">Check Availability</button>
+      <p id="pincodeMessage" style="font-size: 13px; margin-top: 8px; font-weight: 600;"></p>
+    </div>
+
+    <!-- 2. Product Catalog Grid -->
+    <div id="shopSection" class="hidden">
+      <h3 style="margin-bottom: 12px;">Available Products</h3>
+      <div class="grid" id="productGrid"></div>
+    </div>
+
+    <!-- 3. Customer Details & Checkout Screen -->
+    <div class="card-box hidden" id="checkoutSection">
+      <h3>Delivery Details</h3>
+      <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Please enter where to deliver your order</p>
+      
+      <input type="text" id="custName" placeholder="Full Name" />
+      <input type="tel" id="custPhone" placeholder="Mobile Number (10 digits)" maxlength="10" />
+      <textarea id="custAddress" rows="3" placeholder="Complete Flat/House No., Street & Landmark"></textarea>
+      
+      <div style="background: #fafafa; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px dashed #ccc;">
+        <div style="display:flex; justify-content:space-between; font-size:14px;">
+          <span>Payment Mode:</span>
+          <b>Cash on Delivery (COD)</b>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:16px; margin-top:8px;">
+          <span>Final Amount:</span>
+          <b>₹<span id="checkoutTotal">0</span></b>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="submitFinalOrder()">Confirm & Place Order</button>
+      <button class="btn-secondary" onclick="backToShop()">← Back to Store</button>
+    </div>
+
+    <!-- 4. Order Confirmation Receipt -->
+    <div class="card-box hidden" id="orderSuccessSection">
+      <div class="success-badge">✓ Order Placed Successfully!</div>
+      <h3 style="margin-bottom: 8px;">Order Details</h3>
+      <p style="font-size: 14px; margin: 4px 0;"><b>Order ID:</b> <span id="resOrderId"></span></p>
+      <p style="font-size: 14px; margin: 4px 0;"><b>Customer:</b> <span id="resCustName"></span></p>
+      <p style="font-size: 14px; margin: 4px 0;"><b>Address:</b> <span id="resAddress"></span></p>
+      <p style="font-size: 14px; margin: 4px 0;"><b>Delivery Pincode:</b> <span id="resPincode"></span></p>
+      <p style="font-size: 14px; margin: 4px 0;"><b>Total Amount:</b> ₹<span id="resTotal"></span> (Cash on Delivery)</p>
+      <p style="font-size: 14px; margin: 4px 0;"><b>Status:</b> <span style="color:#0c831f; font-weight:700;">Placed (Preparing)</span></p>
+
+      <button class="btn-primary" onclick="resetToHome()" style="margin-top: 16px;">Order More Items</button>
+    </div>
+
+  </div>
+
+  <!-- Bottom Floating Cart Checkout Bar -->
+  <div id="cartBar" class="cart-bar hidden" onclick="openCheckout()">
+    <div><span id="cartCount">0</span> items | ₹<span id="cartTotal">0</span></div>
+    <div>Proceed to Checkout ➔</div>
+  </div>
+
+  <script>
+    const API_URL = 'http://localhost:5001/api';
+    let currentPincode = '';
+    let cart = {};
+    let productsList = [];
+
+    async function verifyPincode() {
+      const pin = document.getElementById('pincodeInput').value.trim();
+      const msg = document.getElementById('pincodeMessage');
+      
+      if (!pin || pin.length < 6) {
+        msg.textContent = 'Please enter a valid 6-digit pincode.';
+        msg.style.color = 'red';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/check-pincode`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pincode: pin })
+        });
+        const data = await res.json();
+
+        if (data.serviceable) {
+          currentPincode = pin;
+          document.getElementById('pincodePill').textContent = `Deliver to: ${pin}`;
+          document.getElementById('pincodeSection').classList.add('hidden');
+          document.getElementById('shopSection').classList.remove('hidden');
+          loadProducts();
+        } else {
+          msg.textContent = data.message;
+          msg.style.color = 'red';
+        }
+      } catch (err) {
+        msg.textContent = 'Server not reachable!';
+        msg.style.color = 'red';
+      }
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch(`${API_URL}/products`);
+        const data = await res.json();
+        productsList = data.products;
+
+        const grid = document.getElementById('productGrid');
+        grid.innerHTML = '';
+
+        productsList.forEach(prod => {
+          const card = document.createElement('div');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <div>
+              <div class="card-title">${prod.name}</div>
+              <div class="card-unit">${prod.unit} • Stock: ${prod.stock}</div>
+            </div>
+            <div class="card-bottom">
+              <div class="card-price">₹${prod.price}</div>
+              <button class="btn-add" onclick="addToCart('${prod.id}')">${prod.stock > 0 ? 'ADD' : 'OUT'}</button>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function addToCart(productId) {
+      const prod = productsList.find(p => p.id === productId);
+      if (!prod || prod.stock <= 0) {
+        alert('Product out of stock!');
+        return;
+      }
+
+      const currentCount = cart[productId] || 0;
+      if (currentCount + 1 > prod.stock) {
+        alert(`Only ${prod.stock} items left in stock!`);
+        return;
+      }
+
+      cart[productId] = currentCount + 1;
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      let totalCount = 0;
+      let totalPrice = 0;
+
+      for (const id in cart) {
+        const count = cart[id];
+        const prod = productsList.find(p => p.id === id);
+        if (prod) {
+          totalCount += count;
+          totalPrice += prod.price * count;
+        }
+      }
+
+      if (totalCount > 0) {
+        document.getElementById('cartBar').classList.remove('hidden');
+        document.getElementById('cartCount').textContent = totalCount;
+        document.getElementById('cartTotal').textContent = totalPrice;
+      } else {
+        document.getElementById('cartBar').classList.add('hidden');
+      }
+    }
+
+    function openCheckout() {
+      let totalPrice = 0;
+      for (const id in cart) {
+        const count = cart[id];
+        const prod = productsList.find(p => p.id === id);
+        if (prod) totalPrice += prod.price * count;
+      }
+
+      document.getElementById('checkoutTotal').textContent = totalPrice;
+      document.getElementById('shopSection').classList.add('hidden');
+      document.getElementById('cartBar').classList.add('hidden');
+      document.getElementById('checkoutSection').classList.remove('hidden');
+    }
+
+    function backToShop() {
+      document.getElementById('checkoutSection').classList.add('hidden');
+      document.getElementById('shopSection').classList.remove('hidden');
+      updateCartUI();
+    }
+
+    async function submitFinalOrder() {
+      const name = document.getElementById('custName').value.trim();
+      const phone = document.getElementById('custPhone').value.trim();
+      const address = document.getElementById('custAddress').value.trim();
+
+      if (!name || !phone || !address) {
+        alert('Please fill all fields: Name, Phone, and Address.');
+        return;
+      }
+
+      if (phone.length < 10) {
+        alert('Please enter a valid 10-digit mobile number.');
+        return;
+      }
+
+      const items = Object.keys(cart).map(id => ({ productId: id, quantity: cart[id] }));
+
+      const payload = {
+        customerName: name,
+        phone: phone,
+        address: address,
+        pincode: currentPincode,
+        items: items,
+        paymentMethod: "COD"
+      };
+
+      try {
+        const res = await fetch(`${API_URL}/orders/place`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById('checkoutSection').classList.add('hidden');
+          document.getElementById('orderSuccessSection').classList.remove('hidden');
+
+          document.getElementById('resOrderId').textContent = data.order.orderId;
+          document.getElementById('resCustName').textContent = data.order.customerName;
+          document.getElementById('resAddress').textContent = data.order.address;
+          document.getElementById('resPincode').textContent = data.order.pincode;
+          document.getElementById('resTotal').textContent = data.order.totalAmount;
+
+          cart = {};
+        } else {
+          alert(`Order Failed: ${data.message}`);
+        }
+      } catch (err) {
+        alert('Error communicating with server.');
+      }
+    }
+
+    function resetToHome() {
+      document.getElementById('orderSuccessSection').classList.add('hidden');
+      document.getElementById('shopSection').classList.remove('hidden');
+      loadProducts();
+      updateCartUI();
+    }
+
+    function showPincodeModal() {
+      document.getElementById('pincodeSection').classList.remove('hidden');
+      document.getElementById('shopSection').classList.add('hidden');
+      document.getElementById('checkoutSection').classList.add('hidden');
+      document.getElementById('orderSuccessSection').classList.add('hidden');
+      document.getElementById('cartBar').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

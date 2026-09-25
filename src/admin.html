@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2038 - Admin Portal</title>
+  <style>
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+    body { background-color: #f1f5f9; color: #0f172a; padding: 20px; }
+    
+    header { background: #0f172a; color: white; padding: 16px 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .brand { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .btn-refresh { background: #0c831f; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    
+    .stats { display: flex; gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: white; flex: 1; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0; }
+    .stat-title { font-size: 13px; color: #64748b; font-weight: 600; }
+    .stat-value { font-size: 24px; font-weight: 800; margin-top: 4px; }
+
+    /* Admin Management Grid */
+    .management-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .manage-box { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .manage-box h4 { margin-bottom: 12px; }
+    .manage-box input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-bottom: 10px; outline: none; }
+    .btn-submit { width: 100%; background: #0f172a; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .pincode-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip { background: #e2e8f0; padding: 4px 10px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+
+    /* Order Card */
+    .order-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
+    .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px; }
+    .order-id { font-weight: 800; font-size: 16px; }
+    .order-status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    
+    .status-Placed { background: #fef3c7; color: #b45309; }
+    .status-Packed { background: #e0e7ff; color: #4338ca; }
+    .status-Out { background: #ffedd5; color: #c2410c; }
+    .status-Delivered { background: #dcfce7; color: #15803d; }
+
+    .order-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; margin-bottom: 16px; }
+    .field-label { color: #64748b; font-size: 12px; margin-bottom: 2px; }
+    
+    .order-actions { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+    .btn-action { border: 1px solid #cbd5e1; background: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-action.active { background: #0f172a; color: white; border-color: #0f172a; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">2038 - Orders & Store Manager</div>
+    <button class="btn-refresh" onclick="loadAllData()">⟳ Refresh</button>
+  </header>
+
+  <!-- Top Metrics -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-title">Total Orders</div>
+      <div class="stat-value" id="totalOrdersCount">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Total Revenue</div>
+      <div class="stat-value">₹<span id="totalRevenue">0</span></div>
+    </div>
+  </div>
+
+  <!-- Store Management (Add Product & Add Pincode) -->
+  <div class="management-grid">
+    <!-- Add Product -->
+    <div class="manage-box">
+      <h4>➕ Add New 2038 Product</h4>
+      <input type="text" id="newProdName" placeholder="Product Name (e.g. 2038 Cold Brew)" />
+      <input type="text" id="newProdCategory" placeholder="Category (e.g. Beverages)" />
+      <div style="display:flex; gap:10px;">
+        <input type="number" id="newProdPrice" placeholder="Price (₹)" />
+        <input type="number" id="newProdStock" placeholder="Stock Qty" />
+      </div>
+      <input type="text" id="newProdUnit" placeholder="Unit (e.g. 250ml, 500g, 1 Pack)" />
+      <button class="btn-submit" onclick="addNewProduct()">Add Product to Catalog</button>
+    </div>
+
+    <!-- Add Serviceable Pincode -->
+    <div class="manage-box">
+      <h4>📍 Add Delivery Pincode</h4>
+      <input type="text" id="newPincode" placeholder="Enter 6-digit Pincode" maxlength="6" />
+      <button class="btn-submit" onclick="addNewPincode()">Activate Pincode</button>
+      <div style="margin-top: 16px;">
+        <span style="font-size: 13px; color: #64748b; font-weight: 600;">Currently Active Pincodes:</span>
+        <div class="pincode-chips" id="activePincodes"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Orders Section -->
+  <h3 style="margin-bottom: 16px;">Live Incoming Orders</h3>
+  <div id="ordersContainer">Loading orders...</div>
+
+  <script>
+    const API_URL = 'http://localhost:5001/api';
+
+    async function loadAllData() {
+      fetchOrders();
+      fetchPincodes();
+    }
+
+    async function fetchOrders() {
+      const container = document.getElementById('ordersContainer');
+      try {
+        const res = await fetch(`${API_URL}/orders`);
+        const data = await res.json();
+        const orders = data.orders.reverse();
+
+        document.getElementById('totalOrdersCount').textContent = orders.length;
+        
+        let revenue = 0;
+        orders.forEach(o => revenue += o.totalAmount);
+        document.getElementById('totalRevenue').textContent = revenue;
+
+        if (orders.length === 0) {
+          container.innerHTML = '<p style="color:#64748b;">No orders received yet.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        orders.forEach(order => {
+          const card = document.createElement('div');
+          card.className = 'order-card';
+          const statusClass = order.orderStatus.includes('Out') ? 'status-Out' : `status-${order.orderStatus}`;
+
+          card.innerHTML = `
+            <div class="order-header">
+              <div>
+                <span class="order-id">${order.orderId}</span>
+                <span style="font-size: 12px; color: #94a3b8; margin-left: 8px;">${new Date(order.createdAt).toLocaleTimeString()}</span>
+              </div>
+              <span class="order-status ${statusClass}">${order.orderStatus}</span>
+            </div>
+            
+            <div class="order-body">
+              <div>
+                <div class="field-label">CUSTOMER DETAILS</div>
+                <div><b>${order.customerName}</b> (${order.phone})</div>
+                <div style="color: #475569; margin-top: 4px;">${order.address}</div>
+                <div style="margin-top: 4px;">Pincode: <b>${order.pincode}</b></div>
+              </div>
+              <div>
+                <div class="field-label">ORDER SUMMARY</div>
+                <div>Payment: <b>${order.paymentMethod}</b></div>
+                <div style="font-size: 16px; margin-top: 4px;">Amount: <b>₹${order.totalAmount}</b></div>
+                <div style="color: #475569; margin-top: 4px;">Items: ${order.items.length} product(s)</div>
+              </div>
+            </div>
+
+            <div class="order-actions">
+              <span style="font-size: 13px; font-weight: 600; margin-right: 8px; align-self: center;">Update Status:</span>
+              <button class="btn-action ${order.orderStatus === 'Placed' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Placed')">Placed</button>
+              <button class="btn-action ${order.orderStatus === 'Packed' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Packed')">Packed</button>
+              <button class="btn-action ${order.orderStatus === 'Out for Delivery' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Out for Delivery')">Out for Delivery</button>
+              <button class="btn-action ${order.orderStatus === 'Delivered' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Delivered')">Delivered</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        container.innerHTML = '<p style="color:red;">Error fetching orders!</p>';
+      }
+    }
+
+    async function updateStatus(orderId, newStatus) {
+      try {
+        const res = await fetch(`${API_URL}/orders/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId, status: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) fetchOrders();
+      } catch (err) {
+        alert('Server error updating status');
+      }
+    }
+
+    async function fetchPincodes() {
+      try {
+        const res = await fetch(`${API_URL}/pincodes`);
+        const data = await res.json();
+        const container = document.getElementById('activePincodes');
+        container.innerHTML = '';
+        data.pincodes.forEach(pin => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = pin;
+          container.appendChild(chip);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function addNewPincode() {
+      const pin = document.getElementById('newPincode').value.trim();
+      if (!pin || pin.length < 6) {
+        alert('Valid 6-digit pin code daalein!');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/pincodes/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pincode: pin })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Pincode successfully added!');
+          document.getElementById('newPincode').value = '';
+          fetchPincodes();
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        alert('Server error!');
+      }
+    }
+
+    async function addNewProduct() {
+      const name = document.getElementById('newProdName').value.trim();
+      const category = document.getElementById('newProdCategory').value.trim();
+      const price = Number(document.getElementById('newProdPrice').value);
+      const stock = Number(document.getElementById('newProdStock').value);
+      const unit = document.getElementById('newProdUnit').value.trim();
+
+      if (!name || !price || !stock || !unit) {
+        alert('Please fill Name, Price, Stock and Unit!');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/products/add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, category, price, stock, unit })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Product added to catalog!');
+          document.getElementById('newProdName').value = '';
+          document.getElementById('newProdCategory').value = '';
+          document.getElementById('newProdPrice').value = '';
+          document.getElementById('newProdStock').value = '';
+          document.getElementById('newProdUnit').value = '';
+        } else {
+          alert(data.message);
+        }
+      } catch (err) {
+        alert('Server error!');
+      }
+    }
+
+    loadAllData();
+    setInterval(fetchOrders, 10000);
+  </script>
+</body>
+</html>
