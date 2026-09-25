@@ -310,7 +310,7 @@ app.get('/api/orders', async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🚀 2038 Server running on port ${PORT}`);
 });
 
