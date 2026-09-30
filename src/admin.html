@@ -3,263 +3,752 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2038 - Admin Portal</title>
+  <title>2038 — Admin Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
   <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background-color: #f1f5f9; color: #0f172a; padding: 20px; }
-    
-    header { background: #0f172a; color: white; padding: 16px 24px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .brand { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
-    .btn-refresh { background: #0c831f; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    
-    .stats { display: flex; gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; flex: 1; padding: 16px; border-radius: 10px; border: 1px solid #e2e8f0; }
-    .stat-title { font-size: 13px; color: #64748b; font-weight: 600; }
-    .stat-value { font-size: 24px; font-weight: 800; margin-top: 4px; }
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --inner-card: #1a2234;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --brand-green: #10b981;
+      --brand-yellow: #f8cb46;
+      --danger: #ef4444;
+    }
 
-    /* Admin Management Grid */
-    .management-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    .manage-box { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
-    .manage-box h4 { margin-bottom: 12px; }
-    .manage-box input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-bottom: 10px; outline: none; }
-    .btn-submit { width: 100%; background: #0f172a; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .pincode-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .chip { background: #e2e8f0; padding: 4px 10px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --inner-card: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --brand-green: #0c831f;
+    }
 
-    /* Order Card */
-    .order-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #e2e8f0; }
-    .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 12px; }
-    .order-id { font-weight: 800; font-size: 16px; }
-    .order-status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
-    
-    .status-Placed { background: #fef3c7; color: #b45309; }
-    .status-Packed { background: #e0e7ff; color: #4338ca; }
-    .status-Out { background: #ffedd5; color: #c2410c; }
-    .status-Delivered { background: #dcfce7; color: #15803d; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.2s, border 0.2s, color 0.2s; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 60px; min-height: 100vh; }
 
-    .order-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; margin-bottom: 16px; }
-    .field-label { color: #64748b; font-size: 12px; margin-bottom: 2px; }
+    .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    .input-field {
+      width: 100%;
+      background: var(--inner-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .input-field:focus { border-color: var(--brand-green); }
+    .btn-submit {
+      width: 100%;
+      background: var(--brand-green);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .admin-nav {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-brand { font-size: 22px; font-weight: 900; letter-spacing: -1px; }
+    .admin-brand span { color: var(--brand-green); }
+
+    .btn-theme-admin {
+      background: var(--inner-card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dashboard-container { max-width: 1200px; margin: 24px auto; padding: 0 20px; }
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto; }
+    .nav-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .nav-btn.active { background: var(--brand-green); color: #fff; border-color: var(--brand-green); }
+
+    .panel-section { display: none; }
+    .panel-section.active { display: block; }
+
+    .panel-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+    .panel-header { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+
+    .order-card { background: var(--inner-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .order-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    .order-id { font-size: 15px; font-weight: 800; color: var(--brand-yellow); }
+    .order-actions { display: flex; gap: 8px; align-items: center; }
     
-    .order-actions { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid #f1f5f9; padding-top: 12px; }
-    .btn-action { border: 1px solid #cbd5e1; background: #fff; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .btn-action.active { background: #0f172a; color: white; border-color: #0f172a; }
+    .badge-status { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+    .status-Placed { background: #166534; color: #bbf7d0; }
+    .status-Packed { background: #3730a3; color: #c7d2fe; }
+    .status-Delivered { background: #065f46; color: #d1fae5; }
+    .status-Cancelled { background: #991b1b; color: #fecaca; }
+    .status-Payment-Review { background: #854d0e; color: #fef08a; }
+
+    .btn-action { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-danger { background: #7f1d1d; border: 1px solid #991b1b; color: #fecaca; }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-success { background: #065f46; border: 1px solid #047857; color: #a7f3d0; }
+    .btn-success:hover { background: var(--brand-green); color: #fff; }
+    .btn-delete-icon { background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+    .btn-delete-icon:hover { background: rgba(239, 68, 68, 0.2); }
+
+    .prod-grid-admin { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+    .prod-card-admin { background: var(--inner-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; position: relative; }
+    .prod-card-admin img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+    .prod-del-btn { position: absolute; top: 18px; right: 18px; background: rgba(0,0,0,0.8); border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+
+    .pincode-wrap { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .pincode-tag { background: var(--inner-card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="brand">2038 - Orders & Store Manager</div>
-    <button class="btn-refresh" onclick="loadAllData()">⟳ Refresh</button>
-  </header>
+  <!-- Login Section -->
+  <div id="loginSection" class="login-container">
+    <div class="login-card">
+      <div style="font-size:36px; margin-bottom:10px;">🔐</div>
+      <h2 style="font-size:22px; font-weight:900; margin-bottom:4px;">2038 Administration</h2>
+      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Enter Administrative Credentials</p>
 
-  <!-- Top Metrics -->
-  <div class="stats">
-    <div class="stat-card">
-      <div class="stat-title">Total Orders</div>
-      <div class="stat-value" id="totalOrdersCount">0</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-title">Total Revenue</div>
-      <div class="stat-value">₹<span id="totalRevenue">0</span></div>
+      <input type="text" id="adminUser" class="input-field" placeholder="Admin Username (Default: admin)" />
+      <input type="password" id="adminPass" class="input-field" placeholder="Admin Password (Default: 2038@admin)" />
+      <button class="btn-submit" onclick="submitAdminLogin()">Access Dashboard</button>
     </div>
   </div>
 
-  <!-- Store Management (Add Product & Add Pincode) -->
-  <div class="management-grid">
-    <!-- Add Product -->
-    <div class="manage-box">
-      <h4>➕ Add New 2038 Product</h4>
-      <input type="text" id="newProdName" placeholder="Product Name (e.g. 2038 Cold Brew)" />
-      <input type="text" id="newProdCategory" placeholder="Category (e.g. Beverages)" />
-      <div style="display:flex; gap:10px;">
-        <input type="number" id="newProdPrice" placeholder="Price (₹)" />
-        <input type="number" id="newProdStock" placeholder="Stock Qty" />
+  <!-- Dashboard Section -->
+  <div id="dashboardSection" style="display:none;">
+    <div class="admin-nav">
+      <div class="admin-brand">20<span>38</span> Administration</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn-theme-admin" id="adminThemeToggleBtn" onclick="toggleAdminTheme()">
+          <span id="adminThemeIcon">☀️</span>
+          <span id="adminThemeText">Light</span>
+        </button>
+
+        <span style="font-size:13px; color:var(--text-muted);" id="loggedInUserDisplay">Logged as admin</span>
+        <button class="btn-action btn-danger" onclick="logoutAdmin()">Logout</button>
       </div>
-      <input type="text" id="newProdUnit" placeholder="Unit (e.g. 250ml, 500g, 1 Pack)" />
-      <button class="btn-submit" onclick="addNewProduct()">Add Product to Catalog</button>
     </div>
 
-    <!-- Add Serviceable Pincode -->
-    <div class="manage-box">
-      <h4>📍 Add Delivery Pincode</h4>
-      <input type="text" id="newPincode" placeholder="Enter 6-digit Pincode" maxlength="6" />
-      <button class="btn-submit" onclick="addNewPincode()">Activate Pincode</button>
-      <div style="margin-top: 16px;">
-        <span style="font-size: 13px; color: #64748b; font-weight: 600;">Currently Active Pincodes:</span>
-        <div class="pincode-chips" id="activePincodes"></div>
+    <div class="dashboard-container">
+      <div class="nav-tabs">
+        <button class="nav-btn active" onclick="switchTab('ordersTab', this)">📦 Orders & Payment Review</button>
+        <button class="nav-btn" onclick="switchTab('productsTab', this)">🛍 Products Catalog</button>
+        <button class="nav-btn" onclick="switchTab('pincodesTab', this)">📍 Postal Delivery Areas</button>
+        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Grid Stock & UTR Verification</button>
+        <button class="nav-btn" onclick="switchTab('settingsTab', this)">⚙ Settings & Credentials</button>
       </div>
+
+      <!-- Tab 1: Orders -->
+      <div id="ordersTab" class="panel-section active">
+        <div class="panel-card">
+          <div class="panel-header">
+            <span>Customer Orders & Verification</span>
+            <button class="btn-action" onclick="fetchOrders()">🔄 Refresh</button>
+          </div>
+          <div id="ordersListContainer">Loading orders...</div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Products -->
+      <div id="productsTab" class="panel-section">
+        <div class="panel-card">
+          <div class="panel-header">Add New Product to Catalog</div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+            <input type="text" id="pName" class="input-field" placeholder="Product Name" />
+            <select id="pCat" class="input-field">
+              <option value="Drinks">Drinks</option>
+              <option value="Snacks">Snacks</option>
+              <option value="Puja">Puja</option>
+              <option value="Chocolate">Chocolate</option>
+            </select>
+            <input type="number" id="pPrice" class="input-field" placeholder="Unit Price (₹)" />
+            <input type="number" id="pStock" class="input-field" placeholder="Inventory Quantity" />
+            <input type="text" id="pUnit" class="input-field" placeholder="Packaging Unit (e.g. 250ml can)" />
+            <input type="text" id="pImage" class="input-field" placeholder="Image File Path (e.g. /ghee.png or Web URL)" />
+          </div>
+          <button class="btn-submit" style="margin-top:8px;" onclick="submitNewProduct()">+ Add Product to 2038</button>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">💡 Pro-tip: Place product images in the <code>src/</code> directory and refer to them as <code>/filename.png</code>.</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">Active Product Catalog</div>
+          <div id="productsListContainer" class="prod-grid-admin">Loading product catalog...</div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Pincodes -->
+      <div id="pincodesTab" class="panel-section">
+        <div class="panel-card">
+          <div class="panel-header">Configure Serviceable Postal Area</div>
+          <div style="display:flex; gap:10px; max-width:400px;">
+            <input type="text" id="newPincodeInput" class="input-field" placeholder="6-digit Postal Code" maxlength="6" style="margin-bottom:0;" />
+            <button class="btn-submit" style="width:auto; padding:0 20px;" onclick="addPincode()">Add</button>
+          </div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">Currently Active Delivery Areas</div>
+          <div id="pincodesListContainer" class="pincode-wrap">Loading postal areas...</div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Grid Stock -->
+      <div id="gridTab" class="panel-section">
+        <div class="panel-card">
+          <div class="panel-header">Store UPI Identifier Configuration</div>
+          <div style="display:flex; gap:10px; max-width:480px;">
+            <input type="text" id="adminUpiInput" class="input-field" placeholder="Enter UPI ID (e.g. storename@bank)" style="margin-bottom:0;" />
+            <button class="btn-submit" style="width:auto; padding:0 20px;" onclick="saveAdminUpiId()">Save UPI</button>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">Note: Ensure your primary QR scanner graphic is saved as <code>src/qr.png</code>.</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <span>Pending Stock UTR Verification Requests</span>
+            <button class="btn-action" onclick="fetchGridDetails()">🔄 Refresh</button>
+          </div>
+          <div id="pendingUtrContainer">Loading pending verification requests...</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <span>Active Block Ownership (Verified Stakeholders)</span>
+          </div>
+          <div id="gridStockInvestorsContainer">Loading verified ownership records...</div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Settings -->
+      <div id="settingsTab" class="panel-section">
+        <div class="panel-card" style="max-width:480px;">
+          <div class="panel-header">Update Administrative Credentials</div>
+          <input type="text" id="changeAdminUser" class="input-field" placeholder="New Admin Username" />
+          <input type="password" id="changeAdminPass" class="input-field" placeholder="New Admin Password" />
+          <button class="btn-submit" onclick="submitChangeCredentials()">Update Credentials</button>
+        </div>
+      </div>
+
     </div>
   </div>
-
-  <!-- Live Orders Section -->
-  <h3 style="margin-bottom: 16px;">Live Incoming Orders</h3>
-  <div id="ordersContainer">Loading orders...</div>
 
   <script>
     const API_URL = '/api';
+    let adminToken = localStorage.getItem('2038_admin_token') || null;
 
-    async function loadAllData() {
-      fetchOrders();
-      fetchPincodes();
+    let adminTheme = localStorage.getItem('2038_admin_theme') || 'dark';
+    applyAdminTheme(adminTheme);
+
+    function toggleAdminTheme() {
+      adminTheme = adminTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('2038_admin_theme', adminTheme);
+      applyAdminTheme(adminTheme);
     }
 
-    async function fetchOrders() {
-      const container = document.getElementById('ordersContainer');
+    function applyAdminTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      const icon = document.getElementById('adminThemeIcon');
+      const text = document.getElementById('adminThemeText');
+      if (theme === 'light') {
+        icon.textContent = '🌙';
+        text.textContent = 'Dark';
+      } else {
+        icon.textContent = '☀️';
+        text.textContent = 'Light';
+      }
+    }
+
+    if (adminToken) {
+      showDashboard();
+    }
+
+    async function submitAdminLogin() {
+      const u = document.getElementById('adminUser').value.trim();
+      const p = document.getElementById('adminPass').value.trim();
+      if (!u || !p) return alert('Username and password are required.');
+
       try {
-        const res = await fetch(`${API_URL}/orders`);
+        const res = await fetch(`${API_URL}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
         const data = await res.json();
-        const orders = data.orders.reverse();
+        if (data.success) {
+          adminToken = data.token;
+          localStorage.setItem('2038_admin_token', adminToken);
+          localStorage.setItem('2038_admin_user', data.username);
+          showDashboard();
+        } else {
+          alert(data.message || 'Authentication failed.');
+        }
+      } catch (e) { alert('Server communication error.'); }
+    }
 
-        document.getElementById('totalOrdersCount').textContent = orders.length;
-        
-        let revenue = 0;
-        orders.forEach(o => revenue += o.totalAmount);
-        document.getElementById('totalRevenue').textContent = revenue;
+    function showDashboard() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('dashboardSection').style.display = 'block';
+      document.getElementById('loggedInUserDisplay').textContent = `Authenticated as ${localStorage.getItem('2038_admin_user') || 'admin'}`;
+      fetchOrders();
+      fetchProducts();
+      fetchPincodes();
+      fetchGridDetails();
+      loadAdminUpi();
+    }
 
+    function logoutAdmin() {
+      localStorage.removeItem('2038_admin_token');
+      localStorage.removeItem('2038_admin_user');
+      location.reload();
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.panel-section').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    async function loadAdminUpi() {
+      try {
+        const res = await fetch(`${API_URL}/config/upi`);
+        const data = await res.json();
+        document.getElementById('adminUpiInput').value = data.upiId || '2038@upi';
+      } catch (e) {}
+    }
+
+    async function saveAdminUpiId() {
+      const upi = document.getElementById('adminUpiInput').value.trim();
+      if (!upi) return alert('Please enter a valid UPI identifier.');
+
+      try {
+        const res = await fetch(`${API_URL}/admin/config/upi`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ upiId: upi })
+        });
+        const data = await res.json();
+        if (data.success) alert('Store UPI configuration saved successfully.');
+        else alert(data.message);
+      } catch (e) { alert('Failed to save UPI identifier.'); }
+    }
+
+    // Orders Management with Direct Payment Verification Actions
+    async function fetchOrders() {
+      const c = document.getElementById('ordersListContainer');
+      try {
+        const res = await fetch(`${API_URL}/orders`, { headers: { 'x-admin-token': adminToken } });
+        const data = await res.json();
+        if (!data.success) return logoutAdmin();
+
+        const orders = data.orders || [];
         if (orders.length === 0) {
-          container.innerHTML = '<p style="color:#64748b;">No orders received yet.</p>';
+          c.innerHTML = '<p style="color:var(--text-muted);">No orders recorded yet.</p>';
           return;
         }
 
-        container.innerHTML = '';
-        orders.forEach(order => {
+        c.innerHTML = '';
+        orders.forEach(o => {
           const card = document.createElement('div');
           card.className = 'order-card';
-          const statusClass = order.orderStatus.includes('Out') ? 'status-Out' : `status-${order.orderStatus}`;
+          
+          let itemsText = o.items.map(it => `• ${it.productName} (${it.quantity}x) — ₹${it.price * it.quantity}`).join('<br>');
+
+          let paymentTag = `<span style="color:var(--brand-yellow); font-weight:800;">Cash On Delivery (COD)</span>`;
+          let verificationActionButtons = '';
+
+          if (o.paymentMethod === 'UPI_QR') {
+            paymentTag = `
+              <span style="color:#38bdf8; font-weight:800;">UPI Online (UTR: <u style="letter-spacing:1px;">${o.utrNumber || 'N/A'}</u>)</span>
+              <span style="margin-left:6px; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:800; ${o.paymentStatus==='Verified'?'background:#065f46;color:#a7f3d0;':'background:#854d0e;color:#fef08a;'}">${o.paymentStatus}</span>
+            `;
+
+            if (o.paymentStatus === 'Pending') {
+              verificationActionButtons = `
+                <div style="background:var(--border-subtle); border:1px solid var(--border); border-radius:8px; padding:8px 12px; margin:10px 0; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:12px; color:#fde68a;">Reconcile with banking records: UTR <b>${o.utrNumber}</b></span>
+                  <div style="display:flex; gap:6px;">
+                    <button class="btn-action btn-success" onclick="verifyOrderPayment('${o.orderId}', 'approve')">✅ Payment Received</button>
+                    <button class="btn-action btn-danger" onclick="verifyOrderPayment('${o.orderId}', 'reject')">❌ Reject & Cancel</button>
+                  </div>
+                </div>
+              `;
+            }
+          }
+
+          let formattedStatus = o.orderStatus.replace(/\s+/g, '-');
 
           card.innerHTML = `
-            <div class="order-header">
+            <div class="order-top">
               <div>
-                <span class="order-id">${order.orderId}</span>
-                <span style="font-size: 12px; color: #94a3b8; margin-left: 8px;">${new Date(order.createdAt).toLocaleTimeString()}</span>
+                <span class="order-id">#${o.orderId}</span>
+                <span class="badge-status status-${formattedStatus}" style="margin-left:8px;">${o.orderStatus}</span>
+                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${new Date(o.createdAt).toLocaleString()}</div>
               </div>
-              <span class="order-status ${statusClass}">${order.orderStatus}</span>
-            </div>
-            
-            <div class="order-body">
-              <div>
-                <div class="field-label">CUSTOMER DETAILS</div>
-                <div><b>${order.customerName}</b> (${order.phone})</div>
-                <div style="color: #475569; margin-top: 4px;">${order.address}</div>
-                <div style="margin-top: 4px;">Pincode: <b>${order.pincode}</b></div>
-              </div>
-              <div>
-                <div class="field-label">ORDER SUMMARY</div>
-                <div>Payment: <b>${order.paymentMethod}</b></div>
-                <div style="font-size: 16px; margin-top: 4px;">Amount: <b>₹${order.totalAmount}</b></div>
-                <div style="color: #475569; margin-top: 4px;">Items: ${order.items.length} product(s)</div>
+              <div class="order-actions">
+                <select onchange="updateOrderStatus('${o.orderId}', this.value)" style="background:var(--card-bg); color:var(--text); border:1px solid var(--border); padding:6px; border-radius:6px; font-size:12px;">
+                  <option value="Payment Review" ${o.orderStatus==='Payment Review'?'selected':''}>Payment Review</option>
+                  <option value="Placed" ${o.orderStatus==='Placed'?'selected':''}>Placed</option>
+                  <option value="Packed" ${o.orderStatus==='Packed'?'selected':''}>Packed</option>
+                  <option value="Out for Delivery" ${o.orderStatus==='Out for Delivery'?'selected':''}>Out for Delivery</option>
+                  <option value="Delivered" ${o.orderStatus==='Delivered'?'selected':''}>Delivered</option>
+                  <option value="Cancelled" ${o.orderStatus==='Cancelled'?'selected':''}>Cancelled</option>
+                </select>
+
+                ${o.orderStatus !== 'Cancelled' ? `<button class="btn-action btn-danger" onclick="cancelFakeOrder('${o.orderId}')">❌ Cancel</button>` : ''}
+                <button class="btn-delete-icon" title="Permanently Delete Order" onclick="deleteOrderPermanently('${o.orderId}')">🗑</button>
               </div>
             </div>
 
-            <div class="order-actions">
-              <span style="font-size: 13px; font-weight: 600; margin-right: 8px; align-self: center;">Update Status:</span>
-              <button class="btn-action ${order.orderStatus === 'Placed' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Placed')">Placed</button>
-              <button class="btn-action ${order.orderStatus === 'Packed' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Packed')">Packed</button>
-              <button class="btn-action ${order.orderStatus === 'Out for Delivery' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Out for Delivery')">Out for Delivery</button>
-              <button class="btn-action ${order.orderStatus === 'Delivered' ? 'active' : ''}" onclick="updateStatus('${order.orderId}', 'Delivered')">Delivered</button>
+            ${verificationActionButtons}
+
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:13px;">
+              <div>
+                <div style="font-weight:800; color:var(--text);">👤 ${o.customerName} (+91 ${o.phone})</div>
+                <div style="color:var(--text-muted); margin-top:2px;">📍 ${o.address} (PIN: ${o.pincode})</div>
+                <div style="margin-top:4px; font-size:12px;">Payment: ${paymentTag}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:16px; font-weight:900; color:var(--brand-yellow);">Total: ₹${o.totalAmount}</div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); font-size:13px; color:var(--text-muted);">
+              ${itemsText}
             </div>
           `;
-          container.appendChild(card);
+          c.appendChild(card);
         });
-
-      } catch (err) {
-        container.innerHTML = '<p style="color:red;">Error fetching orders!</p>';
-      }
+      } catch (e) { c.innerHTML = '<p style="color:red;">Error retrieving order records.</p>'; }
     }
 
-    async function updateStatus(orderId, newStatus) {
+    async function verifyOrderPayment(orderId, action) {
+      const msg = action === 'approve' ? `Confirm receipt of payment for Order #${orderId}?` : `Reject UTR verification and cancel Order #${orderId}?`;
+      if (!confirm(msg)) return;
+
       try {
-        const res = await fetch(`${API_URL}/orders/status`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId, status: newStatus })
+        const res = await fetch(`${API_URL}/orders/verify-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ orderId, action })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          fetchOrders();
+        } else alert(data.message);
+      } catch (e) { alert('Payment verification procedure failed.'); }
+    }
+
+    async function updateOrderStatus(orderId, status) {
+      await fetch(`${API_URL}/orders/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ orderId, status })
+      });
+      fetchOrders();
+    }
+
+    async function cancelFakeOrder(orderId) {
+      if (!confirm(`Cancel Order #${orderId}?`)) return;
+      await updateOrderStatus(orderId, 'Cancelled');
+    }
+
+    async function deleteOrderPermanently(orderId) {
+      if (!confirm(`Permanently remove Order #${orderId} from system database?`)) return;
+      try {
+        const res = await fetch(`${API_URL}/orders/${orderId}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-token': adminToken }
         });
         const data = await res.json();
         if (data.success) fetchOrders();
-      } catch (err) {
-        alert('Server error updating status');
-      }
+        else alert(data.message);
+      } catch (e) { alert('Delete failed.'); }
     }
 
+    // Products Catalog
+    async function fetchProducts() {
+      const c = document.getElementById('productsListContainer');
+      const res = await fetch(`${API_URL}/products`);
+      const data = await res.json();
+      const prods = data.products || [];
+
+      c.innerHTML = '';
+      prods.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'prod-card-admin';
+        card.innerHTML = `
+          <button class="prod-del-btn" title="Delete Product" onclick="deleteProduct('${p.id}')">🗑</button>
+          <img src="${p.image}" alt="${p.name}" />
+          <div style="font-size:14px; font-weight:800;">${p.name}</div>
+          <div style="font-size:12px; color:var(--text-muted);">${p.unit} • ${p.category}</div>
+          <div style="font-size:15px; font-weight:900; color:var(--brand-yellow); margin-top:4px;">₹${p.price} (Stock: ${p.stock})</div>
+        `;
+        c.appendChild(card);
+      });
+    }
+
+    async function submitNewProduct() {
+      const name = document.getElementById('pName').value.trim();
+      const category = document.getElementById('pCat').value;
+      const price = document.getElementById('pPrice').value;
+      const stock = document.getElementById('pStock').value;
+      const unit = document.getElementById('pUnit').value.trim();
+      const image = document.getElementById('pImage').value.trim();
+
+      if (!name || !price || !stock || !unit) return alert('Please complete all product specification fields.');
+
+      const res = await fetch(`${API_URL}/products/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ name, category, price, stock, unit, image })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Product added to catalog successfully.');
+        document.getElementById('pName').value = '';
+        document.getElementById('pPrice').value = '';
+        document.getElementById('pStock').value = '';
+        document.getElementById('pUnit').value = '';
+        document.getElementById('pImage').value = '';
+        fetchProducts();
+      } else { alert(data.message); }
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Permanently remove this item from store catalog?')) return;
+      const res = await fetch(`${API_URL}/products/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+      if (data.success) fetchProducts();
+      else alert(data.message);
+    }
+
+    // Postal Areas
     async function fetchPincodes() {
-      try {
-        const res = await fetch(`${API_URL}/pincodes`);
-        const data = await res.json();
-        const container = document.getElementById('activePincodes');
-        container.innerHTML = '';
-        data.pincodes.forEach(pin => {
-          const chip = document.createElement('span');
-          chip.className = 'chip';
-          chip.textContent = pin;
-          container.appendChild(chip);
-        });
-      } catch (err) {
-        console.error(err);
-      }
+      const c = document.getElementById('pincodesListContainer');
+      const res = await fetch(`${API_URL}/pincodes`, { headers: { 'x-admin-token': adminToken } });
+      const data = await res.json();
+      const pins = data.pincodes || [];
+
+      c.innerHTML = '';
+      pins.forEach(pin => {
+        const tag = document.createElement('div');
+        tag.className = 'pincode-tag';
+        tag.innerHTML = `
+          <span>${pin}</span>
+          <button class="btn-delete-icon" onclick="deletePincode('${pin}')">🗑</button>
+        `;
+        c.appendChild(tag);
+      });
     }
 
-    async function addNewPincode() {
-      const pin = document.getElementById('newPincode').value.trim();
-      if (!pin || pin.length < 6) {
-        alert('Valid 6-digit pin code daalein!');
+    async function addPincode() {
+      const pin = document.getElementById('newPincodeInput').value.trim();
+      if (pin.length !== 6) return alert('Please enter a valid 6-digit postal code.');
+
+      const res = await fetch(`${API_URL}/pincodes/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ pincode: pin })
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('newPincodeInput').value = '';
+        fetchPincodes();
+      } else { alert(data.message); }
+    }
+
+    async function deletePincode(pin) {
+      if (!confirm(`Revoke delivery serviceability for postal area ${pin}?`)) return;
+      const res = await fetch(`${API_URL}/pincodes/${pin}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-token': adminToken }
+      });
+      const data = await res.json();
+      if (data.success) fetchPincodes();
+    }
+
+    // Grid Stock Verification
+    async function fetchGridDetails() {
+      const pendingContainer = document.getElementById('pendingUtrContainer');
+      try {
+        const resReq = await fetch(`${API_URL}/grid/requests`, { headers: { 'x-admin-token': adminToken } });
+        const dataReq = await resReq.json();
+        const pendingRequests = (dataReq.requests || []).filter(r => r.status === 'Pending');
+
+        if (pendingRequests.length === 0) {
+          pendingContainer.innerHTML = '<p style="color:var(--text-muted);">No pending UTR verification requests.</p>';
+        } else {
+          pendingContainer.innerHTML = '';
+          pendingRequests.forEach(r => {
+            const card = document.createElement('div');
+            card.style.cssText = 'background:var(--inner-card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+            card.innerHTML = `
+              <div>
+                <div style="font-weight:800; font-size:14px;">${r.customerName} (+91 ${r.phone})</div>
+                <div style="color:var(--brand-yellow); font-size:13px; margin:2px 0;">Blocks: <b>${r.boxNumbers.map(n=>'#'+n).join(', ')}</b> • Total: <b>₹${r.totalAmount}</b></div>
+                <div style="color:#38bdf8; font-size:13px; font-weight:800;">12-Digit UTR: <u style="letter-spacing:1px;">${r.utrNumber}</u></div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn-action btn-success" onclick="approveUtrRequest('${r.requestId}')">✅ Approve Allocation</button>
+                <button class="btn-action btn-danger" onclick="rejectUtrRequest('${r.requestId}')">❌ Reject / Fraud</button>
+              </div>
+            `;
+            pendingContainer.appendChild(card);
+          });
+        }
+      } catch (e) {
+        pendingContainer.innerHTML = '<p style="color:red;">Error loading UTR requests.</p>';
+      }
+
+      const c = document.getElementById('gridStockInvestorsContainer');
+      const res = await fetch(`${API_URL}/grid/boxes`);
+      const data = await res.json();
+      const boxes = data.boxes || [];
+
+      const owned = boxes.filter(b => b.status === 'owned');
+      if (owned.length === 0) {
+        c.innerHTML = '<p style="color:var(--text-muted);">No verified stock block allocations recorded.</p>';
         return;
       }
 
+      let html = `<p style="font-weight:800; margin-bottom:12px; color:var(--brand-yellow);">Total Allocated: ${owned.length} / 100 Blocks (Capital Raised: ₹${owned.length * 100})</p>`;
+      owned.forEach(b => {
+        html += `
+          <div style="background:var(--inner-card); padding:10px 14px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; border:1px solid var(--border);">
+            <div>
+              <b>Block #${b.boxNumber}</b> — ${b.ownerName} (+91 ${b.ownerPhone})
+              <div style="font-size:11px; color:var(--text-muted);">UTR: ${b.utrNumber || 'N/A'}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="color:var(--brand-green); font-weight:800;">₹100 Verified</span>
+              <button class="btn-delete-icon" title="Revoke Allocation" onclick="revokeBoxOwnership(${b.boxNumber})">🗑 Revoke</button>
+            </div>
+          </div>
+        `;
+      });
+      c.innerHTML = html;
+    }
+
+    async function approveUtrRequest(requestId) {
+      if (!confirm(`Reconciled banking funds for Request #${requestId}? Confirm allocation?`)) return;
       try {
-        const res = await fetch(`${API_URL}/pincodes/add`, {
+        const res = await fetch(`${API_URL}/grid/requests/approve`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pincode: pin })
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ requestId })
         });
         const data = await res.json();
         if (data.success) {
-          alert('Pincode successfully added!');
-          document.getElementById('newPincode').value = '';
-          fetchPincodes();
-        } else {
           alert(data.message);
-        }
-      } catch (err) {
-        alert('Server error!');
-      }
+          fetchGridDetails();
+        } else alert(data.message);
+      } catch (e) { alert('Approval failed.'); }
     }
 
-    async function addNewProduct() {
-      const name = document.getElementById('newProdName').value.trim();
-      const category = document.getElementById('newProdCategory').value.trim();
-      const price = Number(document.getElementById('newProdPrice').value);
-      const stock = Number(document.getElementById('newProdStock').value);
-      const unit = document.getElementById('newProdUnit').value.trim();
-
-      if (!name || !price || !stock || !unit) {
-        alert('Please fill Name, Price, Stock and Unit!');
-        return;
-      }
-
+    async function rejectUtrRequest(requestId) {
+      if (!confirm(`Reject verification for Request #${requestId} and return block(s) to public pool?`)) return;
       try {
-        const res = await fetch(`${API_URL}/products/add`, {
+        const res = await fetch(`${API_URL}/grid/requests/reject`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, category, price, stock, unit })
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ requestId })
         });
         const data = await res.json();
         if (data.success) {
-          alert('Product added to catalog!');
-          document.getElementById('newProdName').value = '';
-          document.getElementById('newProdCategory').value = '';
-          document.getElementById('newProdPrice').value = '';
-          document.getElementById('newProdStock').value = '';
-          document.getElementById('newProdUnit').value = '';
-        } else {
           alert(data.message);
-        }
-      } catch (err) {
-        alert('Server error!');
-      }
+          fetchGridDetails();
+        } else alert(data.message);
+      } catch (e) { alert('Rejection failed.'); }
     }
 
-    loadAllData();
-    setInterval(fetchOrders, 10000);
+    async function revokeBoxOwnership(boxNumber) {
+      if (!confirm(`Revoke ownership for Block #${boxNumber} and mark as available?`)) return;
+      try {
+        const res = await fetch(`${API_URL}/grid/revoke-box`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ boxNumber })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          fetchGridDetails();
+        } else alert(data.message);
+      } catch (e) { alert('Revocation procedure failed.'); }
+    }
+
+    // Credentials Update
+    async function submitChangeCredentials() {
+      const u = document.getElementById('changeAdminUser').value.trim();
+      const p = document.getElementById('changeAdminPass').value.trim();
+      if (!u || !p) return alert('Username and password cannot be empty.');
+
+      const res = await fetch(`${API_URL}/admin/change-credentials`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ newUsername: u, newPassword: p })
+      });
+      const data = await res.json();
+      if (data.success) {
+        adminToken = data.newToken;
+        localStorage.setItem('2038_admin_token', adminToken);
+        localStorage.setItem('2038_admin_user', u);
+        alert('Administrative credentials updated successfully.');
+        document.getElementById('loggedInUserDisplay').textContent = `Authenticated as ${u}`;
+      } else { alert(data.message); }
+    }
   </script>
 </body>
 </html>

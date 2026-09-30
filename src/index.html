@@ -2,127 +2,991 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>2038 - Hyperlocal Store</title>
-  <style>
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-    body { background-color: #f4f6f8; color: #1a1a1a; padding-bottom: 90px; }
-    
-    header { background: #0c831f; color: white; padding: 16px; position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; }
-    .brand { font-size: 24px; font-weight: 800; letter-spacing: 1px; }
-    .pincode-pill { background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    
-    .container { max-width: 600px; margin: 0 auto; padding: 16px; }
-    
-    /* Modals & Cards */
-    .card-box { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
-    .card-box input, .card-box textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; margin: 8px 0; outline: none; }
-    .btn-primary { width: 100%; background: #0c831f; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; }
-    .btn-secondary { width: 100%; background: #e0e0e0; color: #333; border: none; padding: 10px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; margin-top: 8px; }
-    
-    /* Product Grid */
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .product-card { background: white; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #eee; }
-    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
-    .card-unit { font-size: 12px; color: #666; margin-bottom: 12px; }
-    .card-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
-    .card-price { font-weight: 800; font-size: 16px; }
-    .btn-add { background: #fff; border: 1px solid #0c831f; color: #0c831f; font-weight: 700; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
-    .btn-add:hover { background: #0c831f; color: white; }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>2038</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    /* Floating Cart Bar */
-    .cart-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #0c831f; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; cursor: pointer; z-index: 20; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); }
-    
-    /* Success Screen */
-    .success-badge { background: #e8f5e9; color: #2e7d32; padding: 12px; border-radius: 8px; font-weight: 600; text-align: center; margin-bottom: 16px; }
-    .hidden { display: none; }
+  <style>
+    :root {
+      --brand-green: #0c831f;
+      --brand-green-hover: #096818;
+      --brand-green-subtle: #f0fdf4;
+      --brand-yellow: #f8cb46;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --border-color: #e2e8f0;
+      --border-subtle: #f1f5f9;
+      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+      --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.07);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+
+    [data-theme="dark"] {
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-light: #64748b;
+      --bg-page: #090d16;
+      --bg-card: #111827;
+      --border-color: #1f2937;
+      --border-subtle: #1e293b;
+      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+      --shadow-hover: 0 10px 20px -3px rgba(0, 0, 0, 0.6);
+      --brand-green-subtle: rgba(16, 185, 129, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+    body { background-color: var(--bg-page); color: var(--text-main); line-height: 1.5; }
+
+    header {
+      background: var(--bg-card);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand-group { display: flex; align-items: center; gap: 16px; }
+    .brand-logo { font-size: 30px; font-weight: 900; letter-spacing: -1.8px; color: var(--text-main); text-decoration: none; line-height: 1; }
+    .brand-logo span { color: var(--brand-green); }
+
+    .location-selector { display: flex; flex-direction: column; cursor: pointer; padding-left: 14px; border-left: 1px solid var(--border-color); }
+    .location-label { font-size: 11px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 4px; }
+    .location-sub { font-size: 11px; color: var(--text-muted); max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .search-container { flex: 1; max-width: 480px; position: relative; }
+    .search-container input {
+      width: 100%;
+      background: var(--border-subtle);
+      border: 1px solid transparent;
+      padding: 11px 16px 11px 42px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-main);
+      outline: none;
+    }
+    .search-container input:focus {
+      background: var(--bg-card);
+      border-color: var(--brand-green);
+      box-shadow: 0 0 0 3px rgba(12, 131, 31, 0.15);
+    }
+    .search-container svg { position: absolute; left: 14px; top: 11px; width: 18px; height: 18px; fill: var(--text-muted); }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .btn-theme-toggle {
+      background: var(--border-subtle);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 7px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-stock {
+      background: #0f172a;
+      color: var(--brand-yellow);
+      border: 1px solid #334155;
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .hero-wrap { max-width: 1200px; margin: 18px auto 0; padding: 0 20px; }
+    .hero-media-box {
+      position: relative;
+      width: 100%;
+      height: 240px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #000;
+      box-shadow: var(--shadow-hover);
+    }
+    @media (min-width: 768px) { .hero-media-box { height: 280px; } }
+    .hero-media-box video { width: 100%; height: 100%; object-fit: cover; }
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(15,23,42,0.88) 0%, rgba(15,23,42,0.4) 60%, transparent 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 32px;
+      color: #ffffff;
+      pointer-events: none;
+    }
+    .hero-pill { background: var(--brand-yellow); color: #000; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 4px; align-self: flex-start; margin-bottom: 8px; }
+    .hero-heading { font-size: 26px; font-weight: 900; line-height: 1.2; color: #fff; }
+    .hero-subtitle { font-size: 13px; color: #cbd5e1; margin-top: 6px; }
+
+    .category-container { max-width: 1200px; margin: 24px auto 0; padding: 0 20px; }
+    .category-scroll-strip { display: flex; gap: 16px; overflow-x: auto; scrollbar-width: none; padding-bottom: 6px; }
+    .category-scroll-strip::-webkit-scrollbar { display: none; }
+    .category-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; min-width: 72px; padding: 6px; border-radius: var(--radius-md); }
+    .category-icon-box {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: var(--shadow-card);
+    }
+    .category-card.active .category-icon-box { border: 2px solid var(--brand-green); background: var(--brand-green-subtle); transform: scale(1.05); }
+    .category-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: center; }
+    .category-card.active .category-title { color: var(--brand-green); font-weight: 800; }
+
+    .main-catalog-wrap { max-width: 1200px; margin: 28px auto 0; padding: 0 20px 60px; }
+    .section-bar { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+    .section-title { font-size: 20px; font-weight: 900; color: var(--text-main); letter-spacing: -0.5px; }
+
+    .catalog-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (min-width: 768px) { .catalog-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .catalog-grid { grid-template-columns: repeat(5, 1fr); gap: 18px; } }
+
+    .item-card {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: var(--shadow-card);
+    }
+    .item-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+    .item-badge { position: absolute; top: 10px; left: 10px; background: #0f172a; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; border-radius: 4px; }
+    .item-media {
+      width: 100%;
+      height: 140px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 6px 0 10px;
+      background: var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .item-media img { max-width: 90%; max-height: 90%; object-fit: cover; }
+    .item-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.35;
+      height: 36px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      margin-bottom: 2px;
+    }
+    .item-unit { font-size: 11px; color: var(--text-light); font-weight: 600; margin-bottom: 12px; }
+    .item-bottom { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+    .item-price { font-size: 15px; font-weight: 900; color: var(--text-main); }
+    .btn-add {
+      background: var(--bg-card);
+      color: var(--brand-green);
+      border: 1.5px solid var(--brand-green);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn-add:hover { background: var(--brand-green); color: #fff; }
+    .qty-ctrl { background: var(--brand-green); color: #fff; display: flex; align-items: center; gap: 10px; padding: 4px 8px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 800; }
+    .qty-ctrl button { background: transparent; border: none; color: #fff; font-weight: 900; font-size: 14px; cursor: pointer; }
+
+    footer { background: var(--bg-card); border-top: 1px solid var(--border-color); margin-top: 40px; padding-top: 48px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+    .footer-columns { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; padding-bottom: 36px; border-bottom: 1px solid var(--border-subtle); }
+    @media (max-width: 768px) { .footer-columns { grid-template-columns: 1fr 1fr; gap: 24px; } }
+    @media (max-width: 480px) { .footer-columns { grid-template-columns: 1fr; } }
+    .footer-brand-bio { font-size: 13px; color: var(--text-muted); margin-top: 10px; line-height: 1.6; max-width: 280px; }
+    .footer-heading { font-size: 13px; font-weight: 800; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+    .footer-links { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .footer-links li a { font-size: 13px; color: var(--text-muted); text-decoration: none; }
+    .footer-links li a:hover { color: var(--brand-green); }
+    .footer-bottom { padding: 24px 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-light); }
+    .payment-tags { display: flex; gap: 8px; align-items: center; }
+    .pay-pill { background: var(--border-subtle); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; color: var(--text-muted); }
+
+    .floating-cart {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      max-width: 480px;
+      margin: 0 auto;
+      background: var(--brand-green);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 25px rgba(12, 131, 31, 0.4);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 999;
+      cursor: pointer;
+    }
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .drawer-content {
+      background: var(--bg-card);
+      color: var(--text-main);
+      width: 100%;
+      max-width: 520px;
+      border-radius: 20px 20px 0 0;
+      padding: 24px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--border-subtle); }
+    .btn-close { background: var(--border-subtle); color: var(--text-main); border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: 800; }
+    .input-field {
+      width: 100%;
+      background: var(--border-subtle);
+      color: var(--text-main);
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      margin-bottom: 10px;
+      outline: none;
+    }
+    .input-field:focus { border-color: var(--brand-green); }
+    .btn-primary { width: 100%; background: var(--brand-green); color: #fff; border: none; padding: 14px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 10px; }
+
+    /* Cart Line Items */
+    .cart-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      gap: 10px;
+    }
+    .cart-item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .cart-item-title { font-size: 13px; font-weight: 800; color: var(--text-main); }
+    .cart-item-sub { font-size: 11px; color: var(--text-muted); }
+    .cart-item-price { font-size: 13px; font-weight: 900; color: var(--brand-green); margin-top: 2px; }
+    .cart-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cart-qty-pill {
+      background: var(--border-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      padding: 3px 6px;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .cart-qty-pill button {
+      background: none;
+      border: none;
+      color: var(--text-main);
+      font-weight: 900;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-cart-del {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 15px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .pay-method-box {
+      border: 1.5px solid var(--border-color);
+      background: var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pay-method-box.selected {
+      border-color: var(--brand-green);
+      background: var(--brand-green-subtle);
+    }
+    .pay-method-title { font-size: 13px; font-weight: 800; }
+    .pay-method-desc { font-size: 11px; color: var(--text-muted); }
+
+    .tracker-box { background: var(--border-subtle); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin: 16px 0; }
+    .tracker-steps { display: flex; justify-content: space-between; position: relative; margin: 20px 0 10px; }
+    .tracker-line { position: absolute; top: 14px; left: 20px; right: 20px; height: 4px; background: var(--border-color); z-index: 1; }
+    .tracker-progress { position: absolute; top: 14px; left: 20px; height: 4px; background: var(--brand-green); z-index: 2; transition: width 0.4s ease; }
+    .tracker-step-item { position: relative; z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 70px; }
+    .step-circle { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-card); border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: #94a3b8; }
+    .tracker-step-item.completed .step-circle { background: var(--brand-green); border-color: var(--brand-green); color: #fff; }
+    .tracker-step-item.active .step-circle { border-color: var(--brand-green); color: var(--brand-green); }
+    .step-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-align: center; }
+    .tracker-step-item.active .step-title, .tracker-step-item.completed .step-title { color: var(--text-main); font-weight: 800; }
+
+    .stock-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-height: 280px; overflow-y: auto; padding: 8px; background: #0f172a; border-radius: 10px; }
+    .grid-cell { aspect-ratio: 1/1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; cursor: pointer; user-select: none; }
+    .grid-cell:hover { transform: scale(1.15); z-index: 5; }
+    .box-available { background: #10b981; color: #fff; }
+    .box-selected { background: #f8cb46; color: #000; box-shadow: 0 0 6px #f8cb46; }
+    .box-pending { background: #f97316; color: #fff; }
+    .box-owned { background: #ef4444; color: #fff; opacity: 0.6; cursor: not-allowed; }
+
+    .pincode-chips-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px; }
+    .pin-chip { background: var(--border-subtle); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 16px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .pin-chip.active { background: var(--brand-green); color: #fff; border-color: var(--brand-green); }
   </style>
 </head>
 <body>
 
+  <!-- Sticky Header -->
   <header>
-    <div class="brand">2038</div>
-    <div class="pincode-pill" id="pincodePill" onclick="showPincodeModal()">Deliver to: Select Pincode</div>
-  </header>
-
-  <div class="container">
-    
-    <!-- 1. Pincode Check Screen -->
-    <div class="card-box" id="pincodeSection">
-      <h3>Check Delivery Availability</h3>
-      <p style="font-size: 13px; color: #666; margin-top: 4px;">Enter your area pin code to browse 2038 store</p>
-      <input type="text" id="pincodeInput" placeholder="Enter 6-digit Pincode (e.g. 812001)" maxlength="6" />
-      <button class="btn-primary" onclick="verifyPincode()">Check Availability</button>
-      <p id="pincodeMessage" style="font-size: 13px; margin-top: 8px; font-weight: 600;"></p>
-    </div>
-
-    <!-- 2. Product Catalog Grid -->
-    <div id="shopSection" class="hidden">
-      <h3 style="margin-bottom: 12px;">Available Products</h3>
-      <div class="grid" id="productGrid"></div>
-    </div>
-
-    <!-- 3. Customer Details & Checkout Screen -->
-    <div class="card-box hidden" id="checkoutSection">
-      <h3>Delivery Details</h3>
-      <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Please enter where to deliver your order</p>
-      
-      <input type="text" id="custName" placeholder="Full Name" />
-      <input type="tel" id="custPhone" placeholder="Mobile Number (10 digits)" maxlength="10" />
-      <textarea id="custAddress" rows="3" placeholder="Complete Flat/House No., Street & Landmark"></textarea>
-      
-      <div style="background: #fafafa; padding: 12px; border-radius: 8px; margin: 10px 0; border: 1px dashed #ccc;">
-        <div style="display:flex; justify-content:space-between; font-size:14px;">
-          <span>Payment Mode:</span>
-          <b>Cash on Delivery (COD)</b>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:16px; margin-top:8px;">
-          <span>Final Amount:</span>
-          <b>₹<span id="checkoutTotal">0</span></b>
+    <div class="header-inner">
+      <div class="brand-group">
+        <a href="/" class="brand-logo">20<span>38</span></a>
+        
+        <div class="location-selector" onclick="openPincodeModal()">
+          <span class="location-label">📍 Delivery in 10 mins</span>
+          <span class="location-sub" id="locationDisplay">Loading area...</span>
         </div>
       </div>
 
-      <button class="btn-primary" onclick="submitFinalOrder()">Confirm & Place Order</button>
-      <button class="btn-secondary" onclick="backToShop()">← Back to Store</button>
+      <div class="search-container">
+        <svg viewBox="0 0 24 24"><path d="M10 2a8 8 0 015.293 13.998l4.704 4.705a1 1 0 01-1.414 1.414l-4.705-4.704A8 8 0 1110 2zm0 2a6 6 0 100 12 6 6 0 000-12z"/></svg>
+        <input type="text" id="searchInput" placeholder='Search "strom", "ghee", "chocolate", "potato"...' oninput="handleSearch()" />
+      </div>
+
+      <div class="header-actions">
+        <button class="btn-theme-toggle" id="themeToggleBtn" onclick="toggleTheme()">
+          <span id="themeIcon">🌙</span>
+          <span id="themeText">Dark</span>
+        </button>
+
+        <button class="btn-stock" onclick="openGridStockModal()">
+          <span>📈</span>
+          <span>2038 Grid Stock</span>
+        </button>
+
+        <button class="btn-header" id="userProfileBtn" onclick="handleProfileClick()">
+          <span>👤</span>
+          <span id="profileBtnText">Login</span>
+        </button>
+
+        <button class="btn-header" onclick="openOrdersModal()">
+          <span>📦</span>
+          <span>Orders</span>
+        </button>
+      </div>
     </div>
+  </header>
 
-    <!-- 4. Order Confirmation Receipt -->
-    <div class="card-box hidden" id="orderSuccessSection">
-      <div class="success-badge">✓ Order Placed Successfully!</div>
-      <h3 style="margin-bottom: 8px;">Order Details</h3>
-      <p style="font-size: 14px; margin: 4px 0;"><b>Order ID:</b> <span id="resOrderId"></span></p>
-      <p style="font-size: 14px; margin: 4px 0;"><b>Customer:</b> <span id="resCustName"></span></p>
-      <p style="font-size: 14px; margin: 4px 0;"><b>Address:</b> <span id="resAddress"></span></p>
-      <p style="font-size: 14px; margin: 4px 0;"><b>Delivery Pincode:</b> <span id="resPincode"></span></p>
-      <p style="font-size: 14px; margin: 4px 0;"><b>Total Amount:</b> ₹<span id="resTotal"></span> (Cash on Delivery)</p>
-      <p style="font-size: 14px; margin: 4px 0;"><b>Status:</b> <span style="color:#0c831f; font-weight:700;">Placed (Preparing)</span></p>
-
-      <button class="btn-primary" onclick="resetToHome()" style="margin-top: 16px;">Order More Items</button>
+  <!-- Video Hero Banner -->
+  <div class="hero-wrap">
+    <div class="hero-media-box">
+      <video id="heroVideo" autoplay muted loop playsinline preload="auto">
+        <source src="/banner.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-overlay">
+        <span class="hero-pill">⚡️ 10 MINUTE DELIVERY</span>
+        <div class="hero-heading">Chilled Strom Fizz &<br>Hot Artisan Snacks</div>
+        <div class="hero-subtitle">Pure Puja Essentials • Dark Chocolates • Quick Dispatch</div>
+      </div>
     </div>
-
   </div>
 
-  <!-- Bottom Floating Cart Checkout Bar -->
-  <div id="cartBar" class="cart-bar hidden" onclick="openCheckout()">
-    <div><span id="cartCount">0</span> items | ₹<span id="cartTotal">0</span></div>
-    <div>Proceed to Checkout ➔</div>
+  <!-- Categories Strip -->
+  <div class="category-container">
+    <div class="category-scroll-strip">
+      <div class="category-card active" onclick="selectCategory('All', this)">
+        <div class="category-icon-box">✨</div>
+        <span class="category-title">All Items</span>
+      </div>
+      <div class="category-card" onclick="selectCategory('Puja', this)">
+        <div class="category-icon-box">🪔</div>
+        <span class="category-title">Puja</span>
+      </div>
+      <div class="category-card" onclick="selectCategory('Drinks', this)">
+        <div class="category-icon-box">🥤</div>
+        <span class="category-title">Drinks</span>
+      </div>
+      <div class="category-card" onclick="selectCategory('Chocolate', this)">
+        <div class="category-icon-box">🍫</div>
+        <span class="category-title">Chocolate</span>
+      </div>
+      <div class="category-card" onclick="selectCategory('Snacks', this)">
+        <div class="category-icon-box">🍟</div>
+        <span class="category-title">Snacks</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Catalog Grid -->
+  <main class="main-catalog-wrap">
+    <div class="section-bar">
+      <h2 class="section-title" id="sectionHeading">Curated Store Catalog</h2>
+    </div>
+    <div class="catalog-grid" id="productGrid"></div>
+  </main>
+
+  <!-- Production Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-columns">
+        <div>
+          <div class="brand-logo" style="font-size:24px;">20<span>38</span></div>
+          <p class="footer-brand-bio">
+            Hyperlocal instant delivery store bringing quality puja items, signature chilled sodas, and freshly cooked snacks to your doorstep.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-heading">Categories</div>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)" onclick="selectCategory('Puja')">Puja Essentials</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategory('Drinks')">Chilled Drinks</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategory('Chocolate')">Gourmet Chocolates</a></li>
+            <li><a href="javascript:void(0)" onclick="selectCategory('Snacks')">Crispy Snacks</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-heading">Company</div>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)" onclick="openGridStockModal()">2038 Grid Stock</a></li>
+            <li><a href="javascript:void(0)" onclick="openPincodeModal()">Serviceable Areas</a></li>
+            <li><a href="javascript:void(0)">Partner with 2038</a></li>
+            <li><a href="javascript:void(0)">Careers</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <div class="footer-heading">Help & Legal</div>
+          <ul class="footer-links">
+            <li><a href="javascript:void(0)">Customer Support</a></li>
+            <li><a href="javascript:void(0)">Terms of Service</a></li>
+            <li><a href="javascript:void(0)">Privacy Policy</a></li>
+            <li><a href="javascript:void(0)" onclick="openOrdersModal()">Track Order</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>© 2038 Technologies Pvt. Ltd. All rights reserved.</div>
+        <div class="payment-tags">
+          <span class="pay-pill">Cash On Delivery</span>
+          <span class="pay-pill">Dynamic UPI QR</span>
+          <span class="pay-pill">Instant 10 Min</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Cart Bar -->
+  <div id="floatingCart" class="floating-cart" style="display: none;" onclick="openCartDrawer()">
+    <div><b id="cartBarPrice">0 ITEMS • ₹0</b><div style="font-size:11px; opacity:0.9;">Includes free delivery</div></div>
+    <div>View Cart ➔</div>
+  </div>
+
+  <!-- Pincode Selector Modal -->
+  <div id="pincodeModal" class="drawer-overlay" style="align-items:center; padding:20px;">
+    <div class="drawer-content" style="border-radius:16px; max-width:400px; text-align:center;">
+      <div style="font-size:32px; margin-bottom:6px;">📍</div>
+      <h3 style="font-size:18px; font-weight:800;">Choose Delivery Area</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Active Serviceable Areas:</p>
+
+      <div class="pincode-chips-wrap" id="activePincodesListContainer">
+        <span style="font-size:12px; color:var(--text-muted);">Fetching live pincodes...</span>
+      </div>
+
+      <input type="text" id="manualPincodeInput" class="input-field" placeholder="Or enter 6-digit Pincode" maxlength="6" style="text-align:center; font-weight:800; letter-spacing:2px;" />
+      
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button onclick="closePincodeModal()" style="flex:1; padding:12px; background:var(--border-subtle); color:var(--text-main); border:none; border-radius:8px; font-weight:700; cursor:pointer;">Cancel</button>
+        <button onclick="confirmCustomPincode()" style="flex:1; padding:12px; background:var(--brand-green); color:white; border:none; border-radius:8px; font-weight:800; cursor:pointer;">Select</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart & Checkout Drawer -->
+  <div id="cartDrawer" class="drawer-overlay">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <div>
+          <h3 style="font-size:18px; font-weight:900;">My Cart</h3>
+          <span style="font-size:12px; color:var(--text-muted);" id="cartItemsCountText">0 Items</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button onclick="clearEntireCart()" style="background:none; border:none; color:#ef4444; font-size:12px; font-weight:800; cursor:pointer;">Clear Cart</button>
+          <button class="btn-close" onclick="closeCartDrawer()">✕</button>
+        </div>
+      </div>
+
+      <div id="cartItemsList" style="margin-bottom:14px;"></div>
+
+      <div style="background:var(--border-subtle); padding:14px; border-radius:10px; margin:14px 0; border:1px solid var(--border-color);">
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
+          <span>Item Total:</span>
+          <span id="billItemTotal" style="font-weight:700; color:var(--text-main);">₹0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:6px;">
+          <span>Delivery Partner Fee (10 min):</span>
+          <span style="font-weight:800; color:var(--brand-green);">FREE</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          <span>Delivery Pincode:</span>
+          <b id="cartPincodeDisplay" style="color:var(--brand-green);">--</b>
+        </div>
+        <div style="border-top:1px dashed var(--border-color); padding-top:8px; display:flex; justify-content:space-between; font-weight:900; font-size:16px;">
+          <span>Grand Total:</span>
+          <span id="billGrandTotal" style="color:var(--brand-green);">₹0</span>
+        </div>
+      </div>
+
+      <div style="font-size:12px; font-weight:800; margin-bottom:6px;">DELIVERY DETAILS:</div>
+      <input type="text" id="custName" class="input-field" placeholder="Full Name" />
+      <input type="tel" id="custPhone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" />
+      <input type="text" id="custAddress" class="input-field" placeholder="House/Flat No, Landmark & Street" />
+
+      <div style="font-size:12px; font-weight:800; margin:12px 0 6px;">SELECT PAYMENT METHOD:</div>
+      
+      <div class="pay-method-box selected" id="optCOD" onclick="selectPayMethod('COD')">
+        <input type="radio" name="payOpt" id="radioCOD" checked />
+        <div>
+          <div class="pay-method-title">💵 Cash On Delivery (COD)</div>
+          <div class="pay-method-desc">Pay cash when delivery partner arrives at your doorstep</div>
+        </div>
+      </div>
+
+      <div class="pay-method-box" id="optUPI" onclick="selectPayMethod('UPI_QR')">
+        <input type="radio" name="payOpt" id="radioUPI" />
+        <div>
+          <div class="pay-method-title">📲 Pay Online via Instant Dynamic QR</div>
+          <div class="pay-method-desc">Exact bill amount pre-filled automatically on scanning</div>
+        </div>
+      </div>
+
+      <div id="orderUpiBox" style="display:none; background:var(--border-subtle); border:1px solid var(--border-color); border-radius:12px; padding:14px; text-align:center; margin:10px 0;">
+        <div style="background:white; padding:8px; border-radius:10px; display:inline-block; margin-bottom:8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <img id="orderQrImg" src="" alt="Scan to Pay" style="width:170px; height:170px; object-fit:contain; display:block;" />
+        </div>
+        <div style="font-size:15px; font-weight:900; color:var(--brand-green); margin-bottom:2px;" id="orderScanAmountText">Scan to Pay ₹0</div>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">UPI ID: <b class="liveUpiText">2038@upi</b> (Amount pre-filled upon scan)</div>
+        
+        <div style="text-align:left; font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:4px;">ENTER 12-DIGIT UTR / REFERENCE NO. <span style="color:#ef4444;">*MANDATORY</span>:</div>
+        <input type="text" id="orderUtrInput" class="input-field" placeholder="e.g. 427819203847" maxlength="12" style="text-align:center; font-weight:800; letter-spacing:2px;" />
+      </div>
+
+      <button class="btn-primary" id="btnPlaceOrderFinal" onclick="submitFinalOrder()">Place Cash On Delivery Order</button>
+    </div>
+  </div>
+
+  <!-- Profile Dashboard Modal -->
+  <div id="profileDashboardModal" class="drawer-overlay" style="align-items:center; padding:20px;">
+    <div class="drawer-content" style="border-radius:18px; max-width:440px;">
+      <div class="drawer-header">
+        <h3 style="font-size:18px; font-weight:900;">👤 My Profile Dashboard</h3>
+        <button class="btn-close" onclick="closeProfileDashboardModal()">✕</button>
+      </div>
+
+      <div style="background:var(--border-subtle); border:1px solid var(--border-color); border-radius:12px; padding:16px; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:50px; height:50px; border-radius:50%; background:var(--brand-green); color:white; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900;" id="profAvatarLetter">U</div>
+          <div>
+            <div style="font-size:16px; font-weight:900; color:var(--text-main);" id="profCardName">User Name</div>
+            <div style="font-size:12px; color:var(--text-muted);" id="profCardPhone">+91 0000000000</div>
+            <div style="font-size:10px; color:var(--brand-green); font-weight:800; margin-top:2px;" id="profCardUserId">ID: 2038-Customer</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px; font-weight:800; margin-bottom:6px;">📍 SAVED DELIVERY ADDRESS:</div>
+        <textarea id="profInputAddress" class="input-field" rows="2" placeholder="Enter flat/house no, landmark, street name" style="resize:none;"></textarea>
+        <button onclick="saveProfileAddress()" style="width:100%; padding:8px; background:var(--border-subtle); border:1px solid var(--border-color); color:var(--text-main); font-size:12px; font-weight:800; border-radius:6px; cursor:pointer;">
+          💾 Update & Save Default Address
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <button onclick="closeProfileDashboardModal(); openOrdersModal();" style="padding:12px; background:var(--border-subtle); border:1px solid var(--border-color); color:var(--text-main); border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">
+          📦 My Orders
+        </button>
+        <button onclick="closeProfileDashboardModal(); openGridStockModal();" style="padding:12px; background:var(--border-subtle); border:1px solid var(--border-color); color:var(--text-main); border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">
+          📈 2038 Stocks
+        </button>
+      </div>
+
+      <button onclick="logoutCustomerProfile()" style="width:100%; padding:12px; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; border-radius:8px; font-size:13px; font-weight:800; cursor:pointer;">
+        🚪 Logout from 2038
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Order Tracking Drawer Modal -->
+  <div id="orderTrackerModal" class="drawer-overlay">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <div>
+          <h3 id="trackOrderIdTitle" style="font-size:17px; font-weight:900;">Order Tracking</h3>
+          <p id="trackOrderEta" style="font-size:12px; color:var(--brand-green); font-weight:700;">⏱ Estimated Delivery: 10-12 Mins</p>
+        </div>
+        <button class="btn-close" onclick="closeTrackerModal()">✕</button>
+      </div>
+
+      <div id="paymentReviewAlert" style="display:none; background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:10px; border-radius:8px; font-size:12px; font-weight:700; margin-bottom:12px;">
+        ⏳ <b>UPI Payment Under Verification:</b> Your 12-digit UTR reference is currently being reconciled with bank records. Your dispatch process will initiate upon approval.
+      </div>
+
+      <div class="tracker-box">
+        <div class="tracker-steps">
+          <div class="tracker-line"></div>
+          <div class="tracker-progress" id="trackProgressBar" style="width: 15%;"></div>
+
+          <div class="tracker-step-item active" id="stepPlaced">
+            <div class="step-circle">1</div>
+            <span class="step-title">Placed</span>
+          </div>
+          <div class="tracker-step-item" id="stepPacked">
+            <div class="step-circle">2</div>
+            <span class="step-title">Packed</span>
+          </div>
+          <div class="tracker-step-item" id="stepOut">
+            <div class="step-circle">3</div>
+            <span class="step-title">On The Way</span>
+          </div>
+          <div class="tracker-step-item" id="stepDelivered">
+            <div class="step-circle">4</div>
+            <span class="step-title">Delivered</span>
+          </div>
+        </div>
+
+        <div id="cancelledStatusAlert" style="display:none; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:10px; border-radius:8px; text-align:center; font-weight:800; font-size:13px; margin-top:14px;">
+          ❌ This order was cancelled or payment verification was unsuccessful.
+        </div>
+      </div>
+
+      <div id="trackOrderDetails" style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:10px; padding:14px; font-size:13px;"></div>
+
+      <button class="btn-primary" style="margin-top:14px; background:#0f172a; color:#fff;" onclick="refreshCurrentTrack()">🔄 Refresh Real-Time Status</button>
+    </div>
+  </div>
+
+  <!-- Past Orders Modal -->
+  <div id="ordersModal" class="drawer-overlay">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h3>📦 My Orders & Live Tracking</h3>
+        <button class="btn-close" onclick="closeOrdersModal()">✕</button>
+      </div>
+      <div id="customerOrdersContainer">Loading past orders...</div>
+    </div>
+  </div>
+
+  <!-- 2038 Grid Stock Drawer -->
+  <div id="gridStockModal" class="drawer-overlay">
+    <div class="drawer-content" style="background:#0b1120; color:white;">
+      <div class="drawer-header" style="border-color:#1e293b;">
+        <div>
+          <h3 style="font-size:18px; font-weight:900; color:#f8cb46;">📈 2038 Grid Stock</h3>
+          <p style="font-size:12px; color:#94a3b8;">Acquire digital equity ownership blocks in 2038</p>
+        </div>
+        <button class="btn-close" style="background:#1e293b; color:white;" onclick="closeGridStockModal()">✕</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:12px; color:#94a3b8;">
+        <div>Price: <b style="color:#f8cb46;">₹100 / Box</b></div>
+        <div>Total: <b>100 Blocks</b></div>
+        <div>Available: <b id="availBoxesCount" style="color:#10b981;">--</b></div>
+      </div>
+
+      <div class="stock-grid" id="gridBoxesContainer"></div>
+
+      <div style="display:flex; gap:12px; font-size:11px; margin-top:8px; color:#94a3b8;">
+        <span>🟢 Available</span>
+        <span>🟡 Selected</span>
+        <span>🟠 Pending UTR</span>
+        <span>🔴 Owned</span>
+      </div>
+
+      <div style="background:#1e293b; border-radius:8px; padding:12px; margin-top:14px; font-size:13px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+          <span>Selected Blocks:</span>
+          <b id="selectedBoxesText">None</b>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-weight:800; font-size:15px;">
+          <span>Total Investment:</span>
+          <span style="color:#f8cb46;" id="stockTotalPrice">₹0</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" style="background:#f8cb46; color:#000;" onclick="proceedToGridPayment()">
+        Proceed to Pay via Auto-Amount QR ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- Dynamic UPI QR Modal for Stock -->
+  <div id="gridPaymentModal" class="drawer-overlay" style="align-items:center; padding:20px;">
+    <div class="drawer-content" style="border-radius:16px; max-width:400px; text-align:center; background:#0b1120; color:white;">
+      <div style="font-size:28px; margin-bottom:4px;">📲</div>
+      <h3 style="font-size:18px; font-weight:900; color:#f8cb46;">Scan QR to Complete Investment</h3>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">Amount is automatically pre-filled upon scanning:</p>
+
+      <div style="background:white; padding:10px; border-radius:12px; display:inline-block; margin-bottom:12px; box-shadow:0 8px 20px rgba(0,0,0,0.5);">
+        <img id="upiQrImage" src="" alt="Auto-Amount UPI QR" style="width:190px; height:190px; object-fit:contain; display:block;" />
+      </div>
+
+      <div style="font-size:17px; font-weight:900; color:#10b981; margin-bottom:2px;" id="qrAmountDisplay">Amount: ₹0</div>
+      <div style="font-size:12px; color:#cbd5e1; margin-bottom:14px;">UPI ID: <b class="liveUpiText">2038@upi</b></div>
+
+      <div style="text-align:left; font-size:11px; font-weight:700; color:#94a3b8; margin-bottom:4px;">ENTER 12-DIGIT UTR / REFERENCE NO. <span style="color:#ef4444;">*MANDATORY</span>:</div>
+      <input type="text" id="utrNumberInput" class="input-field" placeholder="e.g. 427819203847" maxlength="12" style="text-align:center; font-size:16px; font-weight:800; letter-spacing:2px; background:#1e293b; color:#fff; border-color:#334155;" />
+
+      <button class="btn-primary" style="background:#f8cb46; color:#000;" onclick="submitUtrVerification()">
+        Submit for Administrative Verification
+      </button>
+      <button onclick="closeGridPaymentModal()" style="margin-top:10px; background:none; border:none; color:#94a3b8; font-weight:700; cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="drawer-overlay" style="align-items:center; padding:20px;">
+    <div class="drawer-content" style="border-radius:16px; max-width:380px; text-align:center;">
+      <div style="font-size:32px; margin-bottom:4px;">👤</div>
+      <h3>Customer Access</h3>
+      <p id="authSubtitle" style="font-size:12px; color:var(--text-muted); margin-bottom:14px;">Enter your 10-digit mobile number</p>
+
+      <div id="phoneStep">
+        <input type="tel" id="userAuthPhone" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" style="text-align:center; font-weight:700;" />
+        <button class="btn-primary" onclick="checkPhoneNext()">Continue</button>
+      </div>
+
+      <div id="loginStep" style="display:none;">
+        <input type="password" id="userLoginPin" class="input-field" placeholder="4-digit PIN" maxlength="4" style="text-align:center; font-size:20px; letter-spacing:4px;" />
+        <button class="btn-primary" onclick="completeLogin()">Sign In</button>
+        <p style="margin-top:10px;"><a href="javascript:void(0)" onclick="openForgotPinStep()" style="font-size:12px; color:var(--brand-green); font-weight:700; text-decoration:none;">Forgot PIN? Reset credentials</a></p>
+      </div>
+
+      <div id="registerStep" style="display:none;">
+        <input type="text" id="regUserName" class="input-field" placeholder="Full Legal Name" />
+        <input type="password" id="regUserPin" class="input-field" placeholder="Set 4-digit PIN" maxlength="4" style="text-align:center;" />
+        <input type="text" id="regRecoveryWord" class="input-field" placeholder="Secret Recovery Word (e.g. Favorite City)" />
+        <button class="btn-primary" onclick="completeRegister()">Create Account</button>
+      </div>
+
+      <div id="forgotStep" style="display:none;">
+        <input type="text" id="resetRecoveryWord" class="input-field" placeholder="Enter Secret Recovery Word" />
+        <input type="password" id="resetNewPin" class="input-field" placeholder="Enter New 4-digit PIN" maxlength="4" style="text-align:center;" />
+        <button class="btn-primary" onclick="submitPinReset()">Set New PIN & Login</button>
+      </div>
+
+      <button onclick="closeAuthModal()" style="margin-top:10px; background:none; border:none; color:var(--text-muted); font-weight:700; cursor:pointer;">Cancel</button>
+    </div>
   </div>
 
   <script>
     const API_URL = '/api';
-    let currentPincode = '';
-    let cart = {};
-    let productsList = [];
 
-    async function verifyPincode() {
-      const pin = document.getElementById('pincodeInput').value.trim();
-      const msg = document.getElementById('pincodeMessage');
-      
-      if (!pin || pin.length < 6) {
-        msg.textContent = 'Please enter a valid 6-digit pincode.';
-        msg.style.color = 'red';
-        return;
+    // Theme Management
+    let currentTheme = localStorage.getItem('2038_theme') || 'light';
+    applyTheme(currentTheme);
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+      localStorage.setItem('2038_theme', currentTheme);
+      applyTheme(currentTheme);
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      const icon = document.getElementById('themeIcon');
+      const text = document.getElementById('themeText');
+      if (theme === 'dark') {
+        icon.textContent = '☀️';
+        text.textContent = 'Light';
+      } else {
+        icon.textContent = '🌙';
+        text.textContent = 'Dark';
       }
+    }
+
+    let catalog = [];
+    let cart = {};
+    let currentCategory = 'All';
+    let currentUser = JSON.parse(localStorage.getItem('2038_customer_user') || 'null');
+    let enteredPhoneTemp = '';
+
+    let livePincodes = [];
+    let currentSelectedPincode = localStorage.getItem('2038_pincode') || '';
+
+    let selectedPaymentMode = 'COD';
+    let currentOrderTotal = 0;
+
+    let activeTrackId = null;
+    let allGridBoxes = [];
+    let selectedBoxes = [];
+    let activeUpiId = '2038@upi';
+
+    initStore();
+
+    async function initStore() {
+      syncUserUI();
+      await fetchLivePincodes();
+      await fetchUpiConfig();
+      loadCatalog();
+    }
+
+    async function fetchUpiConfig() {
+      try {
+        const res = await fetch(`${API_URL}/config/upi`);
+        const data = await res.json();
+        activeUpiId = data.upiId || '2038@upi';
+        document.querySelectorAll('.liveUpiText').forEach(el => el.textContent = activeUpiId);
+      } catch (e) {
+        document.querySelectorAll('.liveUpiText').forEach(el => el.textContent = activeUpiId);
+      }
+    }
+
+    function generateDynamicUpiQrUrl(amount, note) {
+      const upiDeepLink = `upi://pay?pa=${activeUpiId}&pn=2038&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiDeepLink)}`;
+    }
+
+    function syncUserUI() {
+      const btn = document.getElementById('profileBtnText');
+      if (currentUser && currentUser.name) {
+        btn.textContent = currentUser.name.split(' ')[0];
+        document.getElementById('custName').value = currentUser.name;
+        document.getElementById('custPhone').value = currentUser.phone;
+        document.getElementById('custAddress').value = currentUser.defaultAddress || '';
+      } else {
+        btn.textContent = 'Login';
+      }
+    }
+
+    async function fetchLivePincodes() {
+      try {
+        const res = await fetch(`${API_URL}/pincodes/active`);
+        const data = await res.json();
+        livePincodes = data.pincodes || [];
+
+        if (!livePincodes.includes(currentSelectedPincode)) {
+          currentSelectedPincode = livePincodes.length > 0 ? livePincodes[0] : '';
+          localStorage.setItem('2038_pincode', currentSelectedPincode);
+        }
+
+        renderLocationUI();
+      } catch (e) {
+        document.getElementById('locationDisplay').textContent = 'Location unavailable';
+      }
+    }
+
+    function renderLocationUI() {
+      const display = document.getElementById('locationDisplay');
+      const cartPin = document.getElementById('cartPincodeDisplay');
+
+      if (currentSelectedPincode) {
+        display.innerHTML = `Area: <b>${currentSelectedPincode}</b> (10 Mins)`;
+        if (cartPin) cartPin.textContent = currentSelectedPincode;
+      } else {
+        display.innerHTML = `<span style="color:#ef4444;">No Serviceable Area Configured</span>`;
+        if (cartPin) cartPin.textContent = 'None Available';
+      }
+    }
+
+    function openPincodeModal() {
+      const container = document.getElementById('activePincodesListContainer');
+      container.innerHTML = '';
+
+      if (livePincodes.length === 0) {
+        container.innerHTML = '<span style="color:#ef4444; font-size:12px;">No delivery areas currently enabled by administration.</span>';
+      } else {
+        livePincodes.forEach(pin => {
+          const chip = document.createElement('div');
+          chip.className = `pin-chip ${pin === currentSelectedPincode ? 'active' : ''}`;
+          chip.textContent = pin;
+          chip.onclick = () => selectPincodeChip(pin);
+          container.appendChild(chip);
+        });
+      }
+
+      document.getElementById('manualPincodeInput').value = currentSelectedPincode;
+      document.getElementById('pincodeModal').style.display = 'flex';
+    }
+
+    function closePincodeModal() { document.getElementById('pincodeModal').style.display = 'none'; }
+
+    function selectPincodeChip(pin) {
+      currentSelectedPincode = pin;
+      localStorage.setItem('2038_pincode', pin);
+      renderLocationUI();
+      closePincodeModal();
+    }
+
+    async function confirmCustomPincode() {
+      const pin = document.getElementById('manualPincodeInput').value.trim();
+      if (!pin || pin.length !== 6) return alert('Please enter a valid 6-digit postal code.');
 
       try {
         const res = await fetch(`${API_URL}/check-pincode`, {
@@ -133,175 +997,653 @@
         const data = await res.json();
 
         if (data.serviceable) {
-          currentPincode = pin;
-          document.getElementById('pincodePill').textContent = `Deliver to: ${pin}`;
-          document.getElementById('pincodeSection').classList.add('hidden');
-          document.getElementById('shopSection').classList.remove('hidden');
-          loadProducts();
+          currentSelectedPincode = pin;
+          localStorage.setItem('2038_pincode', pin);
+          renderLocationUI();
+          closePincodeModal();
+          alert('Delivery available in your selected area!');
         } else {
-          msg.textContent = data.message;
-          msg.style.color = 'red';
+          alert('This area is currently not serviceable.');
         }
-      } catch (err) {
-        msg.textContent = 'Server not reachable!';
-        msg.style.color = 'red';
-      }
+      } catch (e) { alert('Server communication error.'); }
     }
 
-    async function loadProducts() {
+    async function loadCatalog() {
       try {
         const res = await fetch(`${API_URL}/products`);
         const data = await res.json();
-        productsList = data.products;
+        catalog = data.products || [];
+        renderCatalog();
+      } catch (e) { console.error(e); }
+    }
 
-        const grid = document.getElementById('productGrid');
-        grid.innerHTML = '';
+    function renderCatalog() {
+      const container = document.getElementById('productGrid');
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      container.innerHTML = '';
 
-        productsList.forEach(prod => {
-          const card = document.createElement('div');
-          card.className = 'product-card';
-          card.innerHTML = `
-            <div>
-              <div class="card-title">${prod.name}</div>
-              <div class="card-unit">${prod.unit} • Stock: ${prod.stock}</div>
-            </div>
-            <div class="card-bottom">
-              <div class="card-price">₹${prod.price}</div>
-              <button class="btn-add" onclick="addToCart('${prod.id}')">${prod.stock > 0 ? 'ADD' : 'OUT'}</button>
+      const items = catalog.filter(p => {
+        const catMatch = currentCategory === 'All' || p.category === currentCategory;
+        const searchMatch = p.name.toLowerCase().includes(search);
+        return catMatch && searchMatch;
+      });
+
+      items.forEach(p => {
+        const qty = cart[p.id] || 0;
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        let btn = `<button class="btn-add" onclick="modifyQty('${p.id}', 1)">ADD</button>`;
+        if (qty > 0) {
+          btn = `
+            <div class="qty-ctrl">
+              <button onclick="modifyQty('${p.id}', -1)">−</button>
+              <span>${qty}</span>
+              <button onclick="modifyQty('${p.id}', 1)">+</button>
             </div>
           `;
-          grid.appendChild(card);
-        });
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    function addToCart(productId) {
-      const prod = productsList.find(p => p.id === productId);
-      if (!prod || prod.stock <= 0) {
-        alert('Product out of stock!');
-        return;
-      }
-
-      const currentCount = cart[productId] || 0;
-      if (currentCount + 1 > prod.stock) {
-        alert(`Only ${prod.stock} items left in stock!`);
-        return;
-      }
-
-      cart[productId] = currentCount + 1;
-      updateCartUI();
-    }
-
-    function updateCartUI() {
-      let totalCount = 0;
-      let totalPrice = 0;
-
-      for (const id in cart) {
-        const count = cart[id];
-        const prod = productsList.find(p => p.id === id);
-        if (prod) {
-          totalCount += count;
-          totalPrice += prod.price * count;
         }
-      }
 
-      if (totalCount > 0) {
-        document.getElementById('cartBar').classList.remove('hidden');
-        document.getElementById('cartCount').textContent = totalCount;
-        document.getElementById('cartTotal').textContent = totalPrice;
+        card.innerHTML = `
+          <div class="item-badge">${p.badge || 'FRESH'}</div>
+          <div class="item-media"><img src="${p.image}" alt="${p.name}" loading="lazy" /></div>
+          <div class="item-name">${p.name}</div>
+          <div class="item-unit">${p.unit}</div>
+          <div class="item-bottom">
+            <span class="item-price">₹${p.price}</span>
+            ${btn}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+      updateCartBar();
+    }
+
+    function modifyQty(id, diff) {
+      cart[id] = (cart[id] || 0) + diff;
+      if (cart[id] <= 0) delete cart[id];
+      renderCatalog();
+      if (document.getElementById('cartDrawer').style.display === 'flex') {
+        renderCartDrawerItems();
+      }
+    }
+
+    function removeItemFromCart(id) {
+      delete cart[id];
+      renderCatalog();
+      renderCartDrawerItems();
+    }
+
+    function clearEntireCart() {
+      if (confirm('Are you sure you want to empty your entire cart?')) {
+        cart = {};
+        renderCatalog();
+        closeCartDrawer();
+      }
+    }
+
+    function updateCartBar() {
+      const bar = document.getElementById('floatingCart');
+      let count = 0, total = 0;
+      for (let id in cart) {
+        const item = catalog.find(x => x.id === id);
+        if (item) { count += cart[id]; total += item.price * cart[id]; }
+      }
+      if (count > 0) {
+        bar.style.display = 'flex';
+        document.getElementById('cartBarPrice').textContent = `${count} ITEMS • ₹${total}`;
       } else {
-        document.getElementById('cartBar').classList.add('hidden');
+        bar.style.display = 'none';
       }
     }
 
-    function openCheckout() {
-      let totalPrice = 0;
-      for (const id in cart) {
-        const count = cart[id];
-        const prod = productsList.find(p => p.id === id);
-        if (prod) totalPrice += prod.price * count;
-      }
-
-      document.getElementById('checkoutTotal').textContent = totalPrice;
-      document.getElementById('shopSection').classList.add('hidden');
-      document.getElementById('cartBar').classList.add('hidden');
-      document.getElementById('checkoutSection').classList.remove('hidden');
+    function selectCategory(cat, el) {
+      currentCategory = cat;
+      document.querySelectorAll('.category-card').forEach(i => i.classList.remove('active'));
+      if (el) el.classList.add('active');
+      document.getElementById('sectionHeading').textContent = cat === 'All' ? 'Curated Store Catalog' : `${cat} Essentials`;
+      renderCatalog();
     }
 
-    function backToShop() {
-      document.getElementById('checkoutSection').classList.add('hidden');
-      document.getElementById('shopSection').classList.remove('hidden');
-      updateCartUI();
+    function handleSearch() { renderCatalog(); }
+
+    function openCartDrawer() {
+      renderCartDrawerItems();
+      renderLocationUI();
+      selectPayMethod('COD');
+      document.getElementById('cartDrawer').style.display = 'flex';
+    }
+
+    function closeCartDrawer() { document.getElementById('cartDrawer').style.display = 'none'; }
+
+    function renderCartDrawerItems() {
+      const list = document.getElementById('cartItemsList');
+      list.innerHTML = '';
+      currentOrderTotal = 0;
+      let totalItemCount = 0;
+
+      const cartProductIds = Object.keys(cart);
+
+      if (cartProductIds.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:13px;">🛒 Your shopping cart is empty. Add products to continue.</div>';
+        document.getElementById('billItemTotal').textContent = '₹0';
+        document.getElementById('billGrandTotal').textContent = '₹0';
+        document.getElementById('cartItemsCountText').textContent = '0 Items';
+        document.getElementById('btnPlaceOrderFinal').disabled = true;
+        document.getElementById('btnPlaceOrderFinal').style.opacity = '0.5';
+        return;
+      }
+
+      document.getElementById('btnPlaceOrderFinal').disabled = false;
+      document.getElementById('btnPlaceOrderFinal').style.opacity = '1';
+
+      cartProductIds.forEach(id => {
+        const p = catalog.find(x => x.id === id);
+        if (p) {
+          const qty = cart[id];
+          const lineTotal = p.price * qty;
+          currentOrderTotal += lineTotal;
+          totalItemCount += qty;
+
+          const row = document.createElement('div');
+          row.className = 'cart-item-row';
+          row.innerHTML = `
+            <div class="cart-item-info">
+              <span class="cart-item-title">${p.name}</span>
+              <span class="cart-item-sub">${p.unit} • ₹${p.price} each</span>
+              <span class="cart-item-price">₹${lineTotal}</span>
+            </div>
+            <div class="cart-item-actions">
+              <div class="cart-qty-pill">
+                <button onclick="modifyQty('${p.id}', -1)">−</button>
+                <span>${qty}</span>
+                <button onclick="modifyQty('${p.id}', 1)">+</button>
+              </div>
+              <button class="btn-cart-del" title="Remove Item" onclick="removeItemFromCart('${p.id}')">🗑</button>
+            </div>
+          `;
+          list.appendChild(row);
+        }
+      });
+
+      document.getElementById('cartItemsCountText').textContent = `${totalItemCount} Items`;
+      document.getElementById('billItemTotal').textContent = `₹${currentOrderTotal}`;
+      document.getElementById('billGrandTotal').textContent = `₹${currentOrderTotal}`;
+
+      if (selectedPaymentMode === 'UPI_QR') {
+        const qr = document.getElementById('orderQrImg');
+        qr.src = generateDynamicUpiQrUrl(currentOrderTotal, '2038 Store Order');
+        document.getElementById('orderScanAmountText').textContent = `Scan to Pay ₹${currentOrderTotal}`;
+        document.getElementById('btnPlaceOrderFinal').textContent = `Pay ₹${currentOrderTotal} & Submit for Verification`;
+      }
+    }
+
+    function selectPayMethod(mode) {
+      selectedPaymentMode = mode;
+      const optCOD = document.getElementById('optCOD');
+      const optUPI = document.getElementById('optUPI');
+      const radioCOD = document.getElementById('radioCOD');
+      const radioUPI = document.getElementById('radioUPI');
+      const upiBox = document.getElementById('orderUpiBox');
+      const btn = document.getElementById('btnPlaceOrderFinal');
+
+      if (mode === 'COD') {
+        optCOD.className = 'pay-method-box selected';
+        optUPI.className = 'pay-method-box';
+        radioCOD.checked = true;
+        radioUPI.checked = false;
+        upiBox.style.display = 'none';
+        btn.textContent = 'Place Cash On Delivery Order';
+      } else {
+        optCOD.className = 'pay-method-box';
+        optUPI.className = 'pay-method-box selected';
+        radioCOD.checked = false;
+        radioUPI.checked = true;
+        upiBox.style.display = 'block';
+
+        const qr = document.getElementById('orderQrImg');
+        qr.src = generateDynamicUpiQrUrl(currentOrderTotal, '2038 Store Order');
+        document.getElementById('orderScanAmountText').textContent = `Scan to Pay ₹${currentOrderTotal}`;
+        document.getElementById('orderUtrInput').value = '';
+        btn.textContent = `Pay ₹${currentOrderTotal} & Submit for Verification`;
+      }
     }
 
     async function submitFinalOrder() {
+      if (Object.keys(cart).length === 0) return alert('Your cart is empty. Please select products to proceed.');
+
       const name = document.getElementById('custName').value.trim();
       const phone = document.getElementById('custPhone').value.trim();
       const address = document.getElementById('custAddress').value.trim();
 
-      if (!name || !phone || !address) {
-        alert('Please fill all fields: Name, Phone, and Address.');
-        return;
-      }
+      if (!name || !phone || !address) return alert('Please enter your full name, phone number, and delivery address.');
+      if (!currentSelectedPincode) return alert('Please select a serviceable postal area.');
 
-      if (phone.length < 10) {
-        alert('Please enter a valid 10-digit mobile number.');
-        return;
+      let utr = '';
+      if (selectedPaymentMode === 'UPI_QR') {
+        utr = document.getElementById('orderUtrInput').value.trim();
+        const utrRegex = /^[0-9]{12}$/;
+        if (!utrRegex.test(utr)) {
+          return alert('Mandatory: Please input the valid 12-digit numeric UTR/Reference number from your UPI application.');
+        }
       }
 
       const items = Object.keys(cart).map(id => ({ productId: id, quantity: cart[id] }));
-
-      const payload = {
-        customerName: name,
-        phone: phone,
-        address: address,
-        pincode: currentPincode,
-        items: items,
-        paymentMethod: "COD"
-      };
 
       try {
         const res = await fetch(`${API_URL}/orders/place`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            customerName: name,
+            phone,
+            address,
+            pincode: currentSelectedPincode,
+            items,
+            paymentMethod: selectedPaymentMode,
+            utrNumber: utr
+          })
         });
+
         const data = await res.json();
-
         if (data.success) {
-          document.getElementById('checkoutSection').classList.add('hidden');
-          document.getElementById('orderSuccessSection').classList.remove('hidden');
-
-          document.getElementById('resOrderId').textContent = data.order.orderId;
-          document.getElementById('resCustName').textContent = data.order.customerName;
-          document.getElementById('resAddress').textContent = data.order.address;
-          document.getElementById('resPincode').textContent = data.order.pincode;
-          document.getElementById('resTotal').textContent = data.order.totalAmount;
-
           cart = {};
+          closeCartDrawer();
+          renderCatalog();
+          trackSingleOrder(data.order.orderId);
         } else {
-          alert(`Order Failed: ${data.message}`);
+          alert(data.message || 'Order submission failed.');
         }
-      } catch (err) {
-        alert('Error communicating with server.');
+      } catch (e) { alert('Order placement failed due to network error.'); }
+    }
+
+    function handleProfileClick() {
+      if (currentUser && currentUser.name) {
+        openProfileDashboard();
+      } else {
+        openAuthModal();
       }
     }
 
-    function resetToHome() {
-      document.getElementById('orderSuccessSection').classList.add('hidden');
-      document.getElementById('shopSection').classList.remove('hidden');
-      loadProducts();
-      updateCartUI();
+    function openProfileDashboard() {
+      document.getElementById('profCardName').textContent = currentUser.name;
+      document.getElementById('profCardPhone').textContent = `+91 ${currentUser.phone}`;
+      document.getElementById('profCardUserId').textContent = `ID: ${currentUser.userId || '2038-Customer'}`;
+      document.getElementById('profAvatarLetter').textContent = currentUser.name.charAt(0).toUpperCase();
+      document.getElementById('profInputAddress').value = currentUser.defaultAddress || '';
+      document.getElementById('profileDashboardModal').style.display = 'flex';
     }
 
-    function showPincodeModal() {
-      document.getElementById('pincodeSection').classList.remove('hidden');
-      document.getElementById('shopSection').classList.add('hidden');
-      document.getElementById('checkoutSection').classList.add('hidden');
-      document.getElementById('orderSuccessSection').classList.add('hidden');
-      document.getElementById('cartBar').classList.add('hidden');
+    function closeProfileDashboardModal() {
+      document.getElementById('profileDashboardModal').style.display = 'none';
+    }
+
+    async function saveProfileAddress() {
+      const newAddr = document.getElementById('profInputAddress').value.trim();
+      if (!newAddr) return alert('Address field cannot be empty.');
+
+      try {
+        const res = await fetch(`${API_URL}/user/update-address`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: currentUser.phone, address: newAddr })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentUser.defaultAddress = newAddr;
+          localStorage.setItem('2038_customer_user', JSON.stringify(currentUser));
+          syncUserUI();
+          alert('Default delivery address updated successfully.');
+        } else {
+          alert('Unable to update address at this moment.');
+        }
+      } catch (e) { alert('Server error occurred.'); }
+    }
+
+    function logoutCustomerProfile() {
+      if (confirm('Are you sure you wish to log out from 2038?')) {
+        localStorage.removeItem('2038_customer_user');
+        currentUser = null;
+        syncUserUI();
+        closeProfileDashboardModal();
+      }
+    }
+
+    async function trackSingleOrder(orderId) {
+      activeTrackId = orderId;
+      document.getElementById('trackOrderIdTitle').textContent = `Tracking Order #${orderId}`;
+      document.getElementById('orderTrackerModal').style.display = 'flex';
+      await refreshCurrentTrack();
+    }
+
+    function closeTrackerModal() {
+      document.getElementById('orderTrackerModal').style.display = 'none';
+      activeTrackId = null;
+    }
+
+    async function refreshCurrentTrack() {
+      if (!activeTrackId) return;
+
+      try {
+        const res = await fetch(`${API_URL}/orders/track/${activeTrackId}`);
+        const data = await res.json();
+        if (!data.success) return alert('Order record not found.');
+
+        const o = data.order;
+        const status = o.orderStatus;
+
+        const steps = ['stepPlaced', 'stepPacked', 'stepOut', 'stepDelivered'];
+        steps.forEach(s => { document.getElementById(s).className = 'tracker-step-item'; });
+
+        const progressBar = document.getElementById('trackProgressBar');
+        const cancelAlert = document.getElementById('cancelledStatusAlert');
+        const reviewAlert = document.getElementById('paymentReviewAlert');
+
+        if (status === 'Cancelled') {
+          cancelAlert.style.display = 'block';
+          reviewAlert.style.display = 'none';
+          progressBar.style.width = '0%';
+        } else if (status === 'Payment Review') {
+          cancelAlert.style.display = 'none';
+          reviewAlert.style.display = 'block';
+          document.getElementById('stepPlaced').className = 'tracker-step-item active';
+          progressBar.style.width = '15%';
+          document.getElementById('trackOrderEta').textContent = '⏳ Payment Verification Underway';
+        } else {
+          cancelAlert.style.display = 'none';
+          reviewAlert.style.display = 'none';
+
+          if (status === 'Placed') {
+            document.getElementById('stepPlaced').className = 'tracker-step-item active';
+            progressBar.style.width = '15%';
+            document.getElementById('trackOrderEta').textContent = '⏱ Estimated Delivery: 10-12 Mins';
+          } else if (status === 'Packed') {
+            document.getElementById('stepPlaced').className = 'tracker-step-item completed';
+            document.getElementById('stepPacked').className = 'tracker-step-item active';
+            progressBar.style.width = '48%';
+          } else if (status === 'Out for Delivery') {
+            document.getElementById('stepPlaced').className = 'tracker-step-item completed';
+            document.getElementById('stepPacked').className = 'tracker-step-item completed';
+            document.getElementById('stepOut').className = 'tracker-step-item active';
+            progressBar.style.width = '78%';
+          } else if (status === 'Delivered') {
+            steps.forEach(s => document.getElementById(s).className = 'tracker-step-item completed');
+            progressBar.style.width = '100%';
+            document.getElementById('trackOrderEta').textContent = '✅ Delivered Successfully';
+          }
+        }
+
+        const detailsContainer = document.getElementById('trackOrderDetails');
+        let itemsHtml = o.items.map(it => `• ${it.productName} (${it.quantity}x)`).join('<br>');
+        
+        let payInfo = o.paymentMethod === 'UPI_QR' ? `UPI Online (UTR: ${o.utrNumber}) — ${o.paymentStatus}` : 'Cash On Delivery (COD)';
+
+        detailsContainer.innerHTML = `
+          <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+            <span>Recipient: <b>${o.customerName}</b></span>
+            <span style="color:var(--brand-green); font-weight:800;">₹${o.totalAmount}</span>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:4px;">Payment: <b>${payInfo}</b></div>
+          <div style="color:var(--text-muted); font-size:12px; margin-bottom:8px;">📍 ${o.address} (PIN: ${o.pincode})</div>
+          <div style="border-top:1px dashed var(--border-color); padding-top:6px;">${itemsHtml}</div>
+        `;
+      } catch (e) { console.error(e); }
+    }
+
+    async function openOrdersModal() {
+      document.getElementById('ordersModal').style.display = 'flex';
+      const container = document.getElementById('customerOrdersContainer');
+
+      if (!currentUser || !currentUser.phone) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:30px 10px;">
+            <p style="font-weight:700; margin-bottom:10px;">Sign in to view your orders and live tracking</p>
+            <button class="btn-primary" style="max-width:200px;" onclick="closeOrdersModal(); openAuthModal();">Sign In</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '<p style="text-align:center; color:var(--text-muted);">Fetching your orders...</p>';
+      try {
+        const res = await fetch(`${API_URL}/orders/my-orders?phone=${currentUser.phone}`);
+        const data = await res.json();
+        const orders = data.orders || [];
+
+        if (orders.length === 0) {
+          container.innerHTML = '<p style="text-align:center; color:var(--text-muted); padding:20px;">No previous orders found.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        orders.forEach(o => {
+          const div = document.createElement('div');
+          div.style.cssText = 'background:var(--border-subtle); border:1px solid var(--border-color); border-radius:12px; padding:14px; margin-bottom:12px;';
+          div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div>
+                <b style="font-size:14px;">#${o.orderId}</b>
+                <span style="font-size:11px; padding:3px 8px; border-radius:12px; margin-left:6px; background:var(--bg-card); font-weight:800;">${o.orderStatus}</span>
+              </div>
+              <button class="btn-add" style="padding:4px 10px; font-size:11px;" onclick="closeOrdersModal(); trackSingleOrder('${o.orderId}')">🚀 Track Live</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Delivered to <b>${o.pincode}</b> • Total: <b>₹${o.totalAmount} (${o.paymentMethod})</b></div>
+          `;
+          container.appendChild(div);
+        });
+      } catch (e) { container.innerHTML = '<p style="color:red; text-align:center;">Failed to load order history.</p>'; }
+    }
+    function closeOrdersModal() { document.getElementById('ordersModal').style.display = 'none'; }
+
+    // Grid Stock Functions
+    async function openGridStockModal() {
+      document.getElementById('gridStockModal').style.display = 'flex';
+      selectedBoxes = [];
+      updateSelectedStockSummary();
+      await fetchGridBoxes();
+    }
+    function closeGridStockModal() { document.getElementById('gridStockModal').style.display = 'none'; }
+
+    async function fetchGridBoxes() {
+      const container = document.getElementById('gridBoxesContainer');
+      container.innerHTML = '<p style="color:#94a3b8; font-size:12px; grid-column:span 10;">Loading grid infrastructure...</p>';
+      try {
+        const res = await fetch(`${API_URL}/grid/boxes`);
+        const data = await res.json();
+        allGridBoxes = data.boxes || [];
+        document.getElementById('availBoxesCount').textContent = allGridBoxes.filter(b => b.status === 'available').length;
+
+        container.innerHTML = '';
+        allGridBoxes.forEach(b => {
+          const cell = document.createElement('div');
+          const isSelected = selectedBoxes.includes(b.boxNumber);
+          const isOwned = b.status === 'owned';
+          const isPending = b.status === 'pending';
+
+          let statusClass = 'box-available';
+          if (isOwned) statusClass = 'box-owned';
+          else if (isPending) statusClass = 'box-pending';
+          else if (isSelected) statusClass = 'box-selected';
+
+          cell.className = `grid-cell ${statusClass}`;
+          cell.textContent = `#${b.boxNumber}`;
+          
+          let title = `Block #${b.boxNumber} (₹100)`;
+          if (isOwned) title = `Owned by ${b.ownerName}`;
+          if (isPending) title = `Under UTR review (${b.ownerName})`;
+          cell.title = title;
+
+          cell.onclick = () => toggleSelectBox(b);
+          container.appendChild(cell);
+        });
+      } catch (e) { container.innerHTML = '<p style="color:red; grid-column:span 10;">Error retrieving grid allocation.</p>'; }
+    }
+
+    function toggleSelectBox(box) {
+      if (box.status === 'owned') return alert(`Block #${box.boxNumber} is already registered to investor ${box.ownerName}.`);
+      if (box.status === 'pending') return alert(`Block #${box.boxNumber} is currently undergoing verification for ${box.ownerName}.`);
+
+      const idx = selectedBoxes.indexOf(box.boxNumber);
+      if (idx > -1) selectedBoxes.splice(idx, 1);
+      else selectedBoxes.push(box.boxNumber);
+      updateSelectedStockSummary();
+      renderOnlyGridCells();
+    }
+
+    function renderOnlyGridCells() {
+      const container = document.getElementById('gridBoxesContainer');
+      const cells = container.getElementsByClassName('grid-cell');
+      allGridBoxes.forEach((b, i) => {
+        if (cells[i]) {
+          const isSelected = selectedBoxes.includes(b.boxNumber);
+          const isOwned = b.status === 'owned';
+          const isPending = b.status === 'pending';
+
+          let statusClass = 'box-available';
+          if (isOwned) statusClass = 'box-owned';
+          else if (isPending) statusClass = 'box-pending';
+          else if (isSelected) statusClass = 'box-selected';
+
+          cells[i].className = `grid-cell ${statusClass}`;
+        }
+      });
+    }
+
+    function updateSelectedStockSummary() {
+      const count = selectedBoxes.length;
+      document.getElementById('selectedBoxesText').textContent = count > 0 ? selectedBoxes.map(n => `#${n}`).join(', ') : 'None';
+      document.getElementById('stockTotalPrice').textContent = `₹${count * 100}`;
+    }
+
+    function proceedToGridPayment() {
+      if (selectedBoxes.length === 0) return alert('Please select at least one block to invest.');
+      if (!currentUser) {
+        alert('Please sign in to your customer account to acquire stock blocks.');
+        closeGridStockModal();
+        openAuthModal();
+        return;
+      }
+
+      const total = selectedBoxes.length * 100;
+      document.getElementById('qrAmountDisplay').textContent = `Amount: ₹${total}`;
+
+      const qrImg = document.getElementById('upiQrImage');
+      qrImg.src = generateDynamicUpiQrUrl(total, `2038 Stock Blocks ${selectedBoxes.join(',')}`);
+
+      document.getElementById('utrNumberInput').value = '';
+      document.getElementById('gridPaymentModal').style.display = 'flex';
+    }
+
+    function closeGridPaymentModal() {
+      document.getElementById('gridPaymentModal').style.display = 'none';
+    }
+
+    async function submitUtrVerification() {
+      const utr = document.getElementById('utrNumberInput').value.trim();
+      const utrRegex = /^[0-9]{12}$/;
+      if (!utrRegex.test(utr)) {
+        return alert('Mandatory: Please input the valid 12-digit numeric UTR/Reference number from your banking receipt.');
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/grid/request-buy`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: currentUser.phone,
+            boxNumbers: selectedBoxes,
+            utrNumber: utr
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('Payment verification request submitted successfully. The administrative team will reconcile your records shortly.');
+          closeGridPaymentModal();
+          selectedBoxes = [];
+          updateSelectedStockSummary();
+          fetchGridBoxes();
+        } else {
+          alert(data.message || 'Verification request submission failed.');
+        }
+      } catch (e) { alert('Request submission failed.'); }
+    }
+
+    // Customer Authentication
+    function openAuthModal() {
+      document.getElementById('phoneStep').style.display = 'block';
+      document.getElementById('loginStep').style.display = 'none';
+      document.getElementById('registerStep').style.display = 'none';
+      document.getElementById('forgotStep').style.display = 'none';
+      document.getElementById('userAuthPhone').value = '';
+      document.getElementById('authSubtitle').textContent = 'Enter your 10-digit mobile number';
+      document.getElementById('authModal').style.display = 'flex';
+    }
+    function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+    async function checkPhoneNext() {
+      const ph = document.getElementById('userAuthPhone').value.trim();
+      if (ph.length !== 10) return alert('Please enter a valid 10-digit mobile number.');
+      enteredPhoneTemp = ph;
+      const res = await fetch(`${API_URL}/user/check-phone`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: ph }) });
+      const data = await res.json();
+      document.getElementById('phoneStep').style.display = 'none';
+      if (data.exists) {
+        document.getElementById('authSubtitle').textContent = `Welcome back, ${data.name}`;
+        document.getElementById('loginStep').style.display = 'block';
+      } else {
+        document.getElementById('authSubtitle').textContent = `Create New Account for +91 ${ph}`;
+        document.getElementById('registerStep').style.display = 'block';
+      }
+    }
+
+    async function completeLogin() {
+      const pin = document.getElementById('userLoginPin').value.trim();
+      if (pin.length !== 4) return alert('Please enter your 4-digit PIN.');
+      const res = await fetch(`${API_URL}/user/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: enteredPhoneTemp, pin }) });
+      const data = await res.json();
+      if (data.success) {
+        currentUser = data.user;
+        localStorage.setItem('2038_customer_user', JSON.stringify(currentUser));
+        syncUserUI();
+        closeAuthModal();
+      } else { alert(data.message || 'Authentication error.'); }
+    }
+
+    async function completeRegister() {
+      const name = document.getElementById('regUserName').value.trim();
+      const pin = document.getElementById('regUserPin').value.trim();
+      const recoveryWord = document.getElementById('regRecoveryWord').value.trim();
+      if (!name || pin.length !== 4 || !recoveryWord) return alert('All profile registration fields are required.');
+
+      const res = await fetch(`${API_URL}/user/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, phone: enteredPhoneTemp, pin, recoveryWord }) });
+      const data = await res.json();
+      if (data.success) {
+        currentUser = data.user;
+        localStorage.setItem('2038_customer_user', JSON.stringify(currentUser));
+        syncUserUI();
+        closeAuthModal();
+      } else { alert(data.message || 'Registration failed.'); }
+    }
+
+    function openForgotPinStep() {
+      document.getElementById('loginStep').style.display = 'none';
+      document.getElementById('forgotStep').style.display = 'block';
+      document.getElementById('authSubtitle').textContent = 'Reset Access Credentials';
+    }
+
+    async function submitPinReset() {
+      const recoveryWord = document.getElementById('resetRecoveryWord').value.trim();
+      const newPin = document.getElementById('resetNewPin').value.trim();
+      if (!recoveryWord || newPin.length !== 4) return alert('Please enter your secret recovery word and a 4-digit new PIN.');
+
+      const res = await fetch(`${API_URL}/user/reset-pin`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: enteredPhoneTemp, recoveryWord, newPin }) });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        document.getElementById('forgotStep').style.display = 'none';
+        document.getElementById('loginStep').style.display = 'block';
+      } else { alert(data.message); }
     }
   </script>
 </body>
