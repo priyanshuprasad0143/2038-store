@@ -1,9 +1,9 @@
 {
-  "id": "two038-customer-app",
+  "id": "two038-customer-store-v1",
   "name": "2038",
   "short_name": "2038",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/app/",
+  "scope": "/app/",
   "display": "standalone",
   "background_color": "#060913",
   "theme_color": "#00c853",

@@ -2312,10 +2312,10 @@
       } else { alert(data.message); }
     }
 
-    // Pure Native Service Worker Hook (No Custom Popups)
+    // Native Service Worker for Customer App
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js');
+        navigator.serviceWorker.register('/sw.js', { scope: '/app/' });
       });
     }
   </script>

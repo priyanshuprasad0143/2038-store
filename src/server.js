@@ -253,16 +253,16 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. MULTI-PWA ROUTING & SEPARATE SERVICE WORKERS
+// 3. MULTI-PWA ROUTING & SCOPE ISOLATION
 // ==========================================
 
-// 1. Customer Portal
-app.get('/', (req, res) => {
+// 1. Customer Store (Scoped to /app/)
+app.get(['/', '/app', '/app/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Service-Worker-Allowed', '/app/');
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
 app.get('/manifest.json', (req, res) => {
@@ -270,13 +270,13 @@ app.get('/manifest.json', (req, res) => {
   res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
-// 2. Rider Portal
-app.get('/rider', (req, res) => {
+// 2. Rider Portal (Scoped to /rider/)
+app.get(['/rider', '/rider/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'rider.html'));
 });
 app.get('/sw-rider.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Service-Worker-Allowed', '/rider/');
   res.sendFile(path.join(__dirname, 'sw-rider.js'));
 });
 app.get('/manifest-rider.json', (req, res) => {
@@ -284,13 +284,13 @@ app.get('/manifest-rider.json', (req, res) => {
   res.sendFile(path.join(__dirname, 'manifest-rider.json'));
 });
 
-// 3. Admin Portal
-app.get('/admin', (req, res) => {
+// 3. Admin Portal (Scoped to /admin/)
+app.get(['/admin', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 app.get('/sw-admin.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Service-Worker-Allowed', '/admin/');
   res.sendFile(path.join(__dirname, 'sw-admin.js'));
 });
 app.get('/manifest-admin.json', (req, res) => {
