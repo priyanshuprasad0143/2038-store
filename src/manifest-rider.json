@@ -1,9 +1,9 @@
 {
-  "id": "two038-rider-pwa-app",
+  "id": "two038-rider-standalone-app",
   "name": "2038 Rider",
   "short_name": "2038 Rider",
-  "start_url": "/rider",
-  "scope": "/rider",
+  "start_url": "/rider/",
+  "scope": "/rider/",
   "display": "standalone",
   "background_color": "#090d16",
   "theme_color": "#0284c7",
@@ -11,6 +11,12 @@
     {
       "src": "/icon-rider.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-rider.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     }

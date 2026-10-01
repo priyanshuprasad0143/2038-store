@@ -16,7 +16,6 @@ const hashSecret = (val) => {
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
 
 // ==========================================
 // 1. MONGODB ATLAS CONNECTION
@@ -253,33 +252,45 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. STATIC & MULTI-PWA ROUTES
+// 3. MULTI-PWA ROUTING & SEPARATE SERVICE WORKERS
 // ==========================================
 
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
-app.get('/rider', (req, res) => res.sendFile(path.join(__dirname, 'rider.html')));
+// Serve static assets (images, css, videos)
+app.use(express.static(path.join(__dirname)));
 
-// Service Worker (Allowed across whole root)
+// 1. Customer Portal
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Service-Worker-Allowed', '/');
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
-
-// 1. Customer PWA Manifest
 app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
-// 2. Rider PWA Manifest
+// 2. Rider Portal (Both /rider and /rider/)
+app.get('/rider', (req, res) => res.redirect('/rider/'));
+app.get('/rider/', (req, res) => res.sendFile(path.join(__dirname, 'rider.html')));
+app.get('/sw-rider.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Service-Worker-Allowed', '/rider/');
+  res.sendFile(path.join(__dirname, 'sw-rider.js'));
+});
 app.get('/manifest-rider.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest-rider.json'));
 });
 
-// 3. Admin PWA Manifest
+// 3. Admin Portal (Both /admin and /admin/)
+app.get('/admin', (req, res) => res.redirect('/admin/'));
+app.get('/admin/', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/sw-admin.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Service-Worker-Allowed', '/admin/');
+  res.sendFile(path.join(__dirname, 'sw-admin.js'));
+});
 app.get('/manifest-admin.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest-admin.json'));
@@ -1093,4 +1104,4 @@ app.delete('/api/orders/:orderId', verifyAdminToken, async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 2038 Server running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 2038 Multi-PWA Engine running on port ${PORT}`));

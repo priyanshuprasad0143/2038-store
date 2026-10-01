@@ -1,5 +1,5 @@
 {
-  "id": "two038-customer-pwa-app",
+  "id": "two038-customer-app",
   "name": "2038",
   "short_name": "2038",
   "start_url": "/",
@@ -11,6 +11,12 @@
     {
       "src": "/icon-customer.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-customer.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     }
