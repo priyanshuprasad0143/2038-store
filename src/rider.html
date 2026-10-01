@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>2038 — Rider Partner</title>
+  <title>2038 Rider</title>
   
+  <link rel="manifest" href="/manifest-rider.json" />
+  <meta name="theme-color" content="#0284c7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -80,9 +85,11 @@
       position: sticky;
       top: 0;
       z-index: 100;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     .rider-brand { font-size: 18px; font-weight: 900; }
-    .rider-brand span { color: var(--primary); }
+    .rider-brand span { color: #0284c7; }
 
     .header-actions { display: flex; align-items: center; gap: 6px; }
 
@@ -94,6 +101,20 @@
       border-radius: 8px;
       font-size: 12px;
       font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-install-rider {
+      background: rgba(2, 132, 199, 0.15);
+      color: #0284c7;
+      border: 1.5px solid #0284c7;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -139,8 +160,8 @@
       white-space: nowrap;
     }
     .tab-btn.active {
-      background: var(--primary);
-      color: #000;
+      background: #0284c7;
+      color: #fff;
     }
 
     .order-card {
@@ -206,6 +227,7 @@
       cursor: pointer;
       color: #fff;
       text-align: center;
+      min-height: 44px;
     }
     .btn-call { background: #0284c7; }
     .btn-maps { background: #7c3aed; }
@@ -222,6 +244,7 @@
       cursor: pointer;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      min-height: 48px;
     }
 
     .btn-out {
@@ -235,6 +258,7 @@
       border: none;
       cursor: pointer;
       margin-bottom: 8px;
+      min-height: 44px;
     }
 
     .empty-state {
@@ -266,25 +290,29 @@
 </head>
 <body>
 
-  <!-- RIDER LOGIN VIEW -->
+  <!-- Rider Sign In -->
   <div id="riderLoginView" class="login-container">
     <div class="login-card">
       <div style="font-size:36px; margin-bottom:8px;">🛵</div>
-      <h2 style="font-size:20px; font-weight:900; margin-bottom:4px;">2038 Delivery Partner</h2>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:18px;">Sign in to access assigned delivery orders</p>
+      <h2 style="font-size:20px; font-weight:900; margin-bottom:4px;">2038 Rider Portal</h2>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:18px;">Sign in to view assigned delivery tasks</p>
 
-      <input type="text" id="inputRiderId" class="input-field" placeholder="Rider ID (Default: rider)" />
-      <input type="password" id="inputRiderPass" class="input-field" placeholder="Password (Default: 2038@rider)" />
+      <input type="text" id="inputRiderId" class="input-field" placeholder="Rider Identifier (Default: rider)" />
+      <input type="password" id="inputRiderPass" class="input-field" placeholder="Security PIN (Default: 2038@rider)" />
       <button class="btn-login" onclick="submitRiderLogin()">Start Duty</button>
     </div>
   </div>
 
-  <!-- RIDER MAIN DASHBOARD VIEW -->
+  <!-- Rider Dashboard -->
   <div id="riderDashboardView" style="display:none;">
     <header>
       <div class="rider-brand">20<span>38</span> Rider</div>
       
       <div class="header-actions">
+        <button class="btn-install-rider" id="btnRiderInstall" onclick="triggerRiderInstall()">
+          <span>📲</span> <span>Install</span>
+        </button>
+
         <button class="btn-sos" onclick="openSosModal()">
           <span>🆘 SOS Help</span>
         </button>
@@ -301,12 +329,12 @@
     <div class="container">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <span style="font-size:12px; font-weight:800; color:var(--text-muted);" id="riderNameBadge">Partner: Primary Rider</span>
-        <span style="font-size:11px; color:var(--primary); font-weight:800;">● Active on Duty</span>
+        <span style="font-size:11px; color:#0284c7; font-weight:800;">● Active on Duty</span>
       </div>
 
       <div class="tab-nav">
         <button class="tab-btn active" id="tabActiveBtn" onclick="switchRiderTab('active')">
-          🛵 Live (<span id="activeCount">0</span>)
+          🛵 Active (<span id="activeCount">0</span>)
         </button>
         <button class="tab-btn" id="tabHistoryBtn" onclick="switchRiderTab('history')">
           📜 History (<span id="historyCount">0</span>)
@@ -314,28 +342,28 @@
       </div>
 
       <div id="activeOrdersView">
-        <div id="riderActiveContainer">Loading deliveries...</div>
+        <div id="riderActiveContainer">Loading active orders...</div>
       </div>
 
       <div id="historyOrdersView" style="display:none;">
-        <div id="riderHistoryContainer">Loading history...</div>
+        <div id="riderHistoryContainer">Loading completed history...</div>
       </div>
     </div>
   </div>
 
-  <!-- SOS HELP MODAL -->
+  <!-- Emergency Assistance Modal -->
   <div id="sosModal" class="sos-modal-overlay">
     <div class="sos-modal">
       <div style="font-size:36px; margin-bottom:6px;">🆘</div>
       <h3 style="font-size:18px; font-weight:900; margin-bottom:4px;">Delivery Assistance & Helpline</h3>
-      <p style="font-size:12px; color:var(--text-muted); margin-bottom:18px;">Customer not answering or facing route issues? Connect with store manager directly.</p>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:18px;">Customer unreachable or route navigation issues? Contact store manager directly.</p>
 
       <a id="sosCallLink" href="tel:9123456789" style="display:block; background:#0284c7; color:#fff; padding:12px; border-radius:10px; font-size:13px; font-weight:900; text-decoration:none; margin-bottom:10px;">
-        📞 Call Store Manager Now
+        📞 Call Store Manager
       </a>
 
       <a id="sosWaLink" href="https://wa.me/919123456789" target="_blank" style="display:block; background:#059669; color:#fff; padding:12px; border-radius:10px; font-size:13px; font-weight:900; text-decoration:none; margin-bottom:14px;">
-        💬 Send Urgent WhatsApp SOS
+        💬 Send Emergency WhatsApp SOS
       </a>
 
       <button onclick="closeModal('sosModal')" style="background:var(--border); color:var(--text); border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:800; width:100%; cursor:pointer;">
@@ -349,6 +377,24 @@
     let riderToken = localStorage.getItem('2038_rider_token') || null;
     let currentRiderTab = 'active';
     let storeHelpPhone = '9123456789';
+    let deferredRiderPrompt = null;
+
+    // Listen for native install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredRiderPrompt = e;
+      const btn = document.getElementById('btnRiderInstall');
+      if (btn) btn.style.display = 'inline-flex';
+    });
+
+    function triggerRiderInstall() {
+      if (deferredRiderPrompt) {
+        deferredRiderPrompt.prompt();
+        deferredRiderPrompt.userChoice.then(() => { deferredRiderPrompt = null; });
+      } else {
+        alert('To install 2038 Rider App:\n\n• On Mobile: Tap browser menu (⋮) and select "Install App" or "Add to Home screen".\n• On Laptop/Mac: Click the Install icon in the browser address bar.');
+      }
+    }
 
     let riderTheme = localStorage.getItem('2038_rider_theme') || 'dark';
     applyRiderTheme(riderTheme);
@@ -376,7 +422,7 @@
     async function submitRiderLogin() {
       const id = document.getElementById('inputRiderId').value.trim();
       const p = document.getElementById('inputRiderPass').value.trim();
-      if (!id || !p) return alert('Enter Rider ID and Password.');
+      if (!id || !p) return alert('Rider identifier and PIN are required.');
 
       try {
         const res = await fetch(`${API_URL}/rider/login`, {
@@ -391,9 +437,9 @@
           localStorage.setItem('2038_rider_name', data.rider.name);
           showRiderDashboard();
         } else {
-          alert('❌ ' + data.message);
+          alert(data.message);
         }
-      } catch (e) { alert('Login error.'); }
+      } catch (e) { alert('Sign in process failed.'); }
     }
 
     function showRiderDashboard() {
@@ -406,7 +452,7 @@
     }
 
     function logoutRider() {
-      if (!confirm('Log out from delivery duty?')) return;
+      if (!confirm('Sign out from active delivery shift?')) return;
       localStorage.removeItem('2038_rider_token');
       localStorage.removeItem('2038_rider_name');
       location.reload();
@@ -419,7 +465,7 @@
         if (data.phone) {
           storeHelpPhone = data.phone;
           document.getElementById('sosCallLink').href = `tel:${storeHelpPhone}`;
-          const sosMsg = encodeURIComponent(`URGENT: Delivery Partner ${localStorage.getItem('2038_rider_name') || ''} needs immediate assistance regarding an active delivery.`);
+          const sosMsg = encodeURIComponent(`URGENT: Delivery Partner ${localStorage.getItem('2038_rider_name') || ''} requires immediate coordination for an active delivery.`);
           document.getElementById('sosWaLink').href = `https://wa.me/91${storeHelpPhone}?text=${sosMsg}`;
         }
       } catch (e) {}
@@ -477,7 +523,7 @@
             <div class="empty-state">
               <div style="font-size:48px; margin-bottom:8px;">🛵</div>
               <h3 style="font-size:16px;">No Active Deliveries</h3>
-              <p style="font-size:12px; margin-top:4px;">Waiting for store to pack new orders...</p>
+              <p style="font-size:12px; margin-top:4px;">Waiting for store hub to package new orders...</p>
             </div>
           `;
           return;
@@ -492,7 +538,7 @@
           let gpsLabel = '';
           if (o.latitude && o.longitude) {
             mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${o.latitude},${o.longitude}`;
-            gpsLabel = `<span style="color:var(--primary); font-weight:800; font-size:10px; margin-left:6px;">🎯 Exact GPS Pin</span>`;
+            gpsLabel = `<span style="color:#0284c7; font-weight:800; font-size:10px; margin-left:6px;">🎯 Precise GPS Pin</span>`;
           }
 
           let itemsText = o.items.map(it => `• ${it.productName} (${it.quantity}x)`).join('<br>');
@@ -501,7 +547,7 @@
           if (o.orderStatus === 'Packed') {
             statusActionBtn = `
               <button class="btn-out" onclick="updateRiderStatus('${o.orderId}', 'Out for Delivery')">
-                🚀 Start Ride (Mark Out for Delivery)
+                🚀 Start Transit (Mark Out for Delivery)
               </button>
             `;
           }
@@ -514,19 +560,19 @@
 
             <div class="customer-info">
               <div class="cust-name">👤 ${o.customerName}</div>
-              <div class="cust-addr">📍 ${o.address} (PIN: ${o.pincode}) ${gpsLabel}</div>
-              <div style="font-size:13px; margin-top:4px; font-weight:900; color:var(--primary);">
-                Collect: ₹${o.totalAmount} (${o.paymentMethod})
+              <div class="cust-addr">📍 ${o.address} (Postal Hub: ${o.pincode}) ${gpsLabel}</div>
+              <div style="font-size:13px; margin-top:4px; font-weight:900; color:#0284c7;">
+                Collection Amount: ₹${o.totalAmount} (${o.paymentMethod})
               </div>
             </div>
 
             <div class="items-box">
-              <b>Packet Items:</b><br>${itemsText}
+              <b>Package Contents:</b><br>${itemsText}
             </div>
 
             <div class="action-grid">
               <a href="tel:${o.phone}" class="btn-action btn-call">📞 Call Customer</a>
-              <a href="${mapsUrl}" target="_blank" class="btn-action btn-maps">🗺️ Direct Navigation</a>
+              <a href="${mapsUrl}" target="_blank" class="btn-action btn-maps">🗺️ Turn-by-Turn Map</a>
             </div>
 
             ${statusActionBtn}
@@ -538,7 +584,7 @@
           container.appendChild(card);
         });
       } catch (e) {
-        container.innerHTML = '<p style="color:red; text-align:center;">Failed to load deliveries.</p>';
+        container.innerHTML = '<p style="color:red; text-align:center;">Failed to retrieve assigned deliveries.</p>';
       }
     }
 
@@ -558,7 +604,7 @@
             <div class="empty-state">
               <div style="font-size:48px; margin-bottom:8px;">📜</div>
               <h3 style="font-size:16px;">No Delivery History</h3>
-              <p style="font-size:12px; margin-top:4px;">Delivered orders will appear here.</p>
+              <p style="font-size:12px; margin-top:4px;">Delivered orders will appear here automatically.</p>
             </div>
           `;
           return;
@@ -581,14 +627,14 @@
               <div class="cust-name">👤 ${o.customerName}</div>
               <div class="cust-addr">📍 ${o.address} (${o.pincode})</div>
               <div style="font-size:12px; margin-top:4px; font-weight:800; color:var(--text-muted);">
-                Amount Collected: <b style="color:var(--primary);">₹${o.totalAmount}</b> (${o.paymentMethod})
+                Amount Collected: <b style="color:#0284c7;">₹${o.totalAmount}</b> (${o.paymentMethod})
               </div>
             </div>
           `;
           container.appendChild(card);
         });
       } catch (e) {
-        container.innerHTML = '<p style="color:red; text-align:center;">Failed to load history.</p>';
+        container.innerHTML = '<p style="color:red; text-align:center;">Failed to retrieve historical delivery records.</p>';
       }
     }
 
@@ -606,10 +652,16 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert('✅ ' + data.message);
+          alert(data.message);
           fetchOrders();
         } else alert(data.message);
-      } catch (e) { alert('Status update failed'); }
+      } catch (e) { alert('Status update process failed.'); }
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
     }
   </script>
 </body>

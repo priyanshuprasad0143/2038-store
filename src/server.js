@@ -217,7 +217,7 @@ async function initializeDefaults() {
   }
 }
 
-// Middleware: Admin Token Verification
+// Token Middleware
 const verifyAdminToken = async (req, res, next) => {
   const token = req.headers['x-admin-token'];
   if (!token) return res.status(401).json({ success: false, message: 'Unauthorized access.' });
@@ -235,7 +235,6 @@ const verifyAdminToken = async (req, res, next) => {
   }
 };
 
-// Middleware: Rider Token Verification
 const verifyRiderToken = async (req, res, next) => {
   const token = req.headers['x-rider-token'];
   if (!token) return res.status(401).json({ success: false, message: 'Rider authentication required.' });
@@ -254,29 +253,41 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. STATIC & PWA ROUTES
+// 3. STATIC & PWA MANIFEST ROUTES
 // ==========================================
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/rider', (req, res) => res.sendFile(path.join(__dirname, 'rider.html')));
 
-// Explicit PWA Service Worker & Manifest Endpoints with Headers
+// Service Worker
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
 
+// 1. Customer PWA Manifest (Name: 2038)
 app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
+// 2. Rider PWA Manifest (Name: 2038 Rider)
+app.get('/manifest-rider.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.sendFile(path.join(__dirname, 'manifest-rider.json'));
+});
+
+// 3. Admin PWA Manifest (Name: 2038 Admin)
+app.get('/manifest-admin.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.sendFile(path.join(__dirname, 'manifest-admin.json'));
 });
 
 // ==========================================
 // 4. API ROUTES
 // ==========================================
 
-// Store Config & Support Phone APIs
 app.get('/api/config/store-status', async (req, res) => {
   try {
     const cfg = await Config.findOne({ key: 'store_status' });
@@ -476,7 +487,7 @@ app.post('/api/rider/login', async (req, res) => {
   }
 });
 
-// Grid Stock APIs & User Stock Portfolio
+// Grid Stock APIs
 app.get('/api/grid/boxes', async (req, res) => {
   try {
     const boxes = await GridBox.find({}).sort({ boxNumber: 1 });
@@ -518,7 +529,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
     }
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
     if (unavailable.length > 0) {
       const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
       return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });
