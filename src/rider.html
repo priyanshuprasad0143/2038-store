@@ -107,20 +107,6 @@
       gap: 4px;
     }
 
-    .btn-install-rider {
-      background: rgba(2, 132, 199, 0.15);
-      color: #0284c7;
-      border: 1.5px solid #0284c7;
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 900;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
     .btn-sos {
       background: rgba(239, 68, 68, 0.15);
       color: #ef4444;
@@ -309,10 +295,6 @@
       <div class="rider-brand">20<span>38</span> Rider</div>
       
       <div class="header-actions">
-        <button class="btn-install-rider" id="btnRiderInstall" onclick="triggerRiderInstall()">
-          <span>📲</span> <span>Install</span>
-        </button>
-
         <button class="btn-sos" onclick="openSosModal()">
           <span>🆘 SOS Help</span>
         </button>
@@ -377,24 +359,6 @@
     let riderToken = localStorage.getItem('2038_rider_token') || null;
     let currentRiderTab = 'active';
     let storeHelpPhone = '9123456789';
-    let deferredRiderPrompt = null;
-
-    // Listen for native install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredRiderPrompt = e;
-      const btn = document.getElementById('btnRiderInstall');
-      if (btn) btn.style.display = 'inline-flex';
-    });
-
-    function triggerRiderInstall() {
-      if (deferredRiderPrompt) {
-        deferredRiderPrompt.prompt();
-        deferredRiderPrompt.userChoice.then(() => { deferredRiderPrompt = null; });
-      } else {
-        alert('To install 2038 Rider App:\n\n• On Mobile: Tap browser menu (⋮) and select "Install App" or "Add to Home screen".\n• On Laptop/Mac: Click the Install icon in the browser address bar.');
-      }
-    }
 
     let riderTheme = localStorage.getItem('2038_rider_theme') || 'dark';
     applyRiderTheme(riderTheme);
@@ -411,7 +375,7 @@
       if (theme === 'light') {
         icon.textContent = '🌙';
       } else {
-        icon.textContent = '☀️';
+        icon.textContent = '☀️️';
       }
     }
 
@@ -658,6 +622,7 @@
       } catch (e) { alert('Status update process failed.'); }
     }
 
+    // Pure Native Service Worker Hook (No Custom Popups)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');

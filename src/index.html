@@ -7,7 +7,7 @@
   
   <!-- PWA Manifest & App Theme -->
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#00c853" />
+  <meta name="theme-color" content="#00e676" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -124,6 +124,7 @@
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
     }
 
+    /* HEADER */
     header {
       background: var(--glass-bg);
       backdrop-filter: blur(20px);
@@ -799,9 +800,7 @@
     .tracker-step-item.completed .step-circle { background: var(--primary); border-color: var(--primary); color: #000; }
     .tracker-step-item.active .step-circle { border-color: var(--primary); color: var(--primary); }
 
-    /* ==========================================
-       LUXURY EQUITY CERTIFICATE STYLES
-       ========================================== */
+    /* EQUITY CERTIFICATE STYLES */
     .certificate-card-canvas {
       position: relative;
       background: #fffdfa;
@@ -1126,7 +1125,7 @@
         </div>
       </div>
 
-      <!-- Digital Stock Certificate Banner (Appears if user owns stock blocks) -->
+      <!-- Digital Stock Certificate Banner -->
       <div id="userCertificateBanner" style="display:none; background:linear-gradient(135deg, rgba(255,171,0,0.15), rgba(255,143,0,0.05)); border:1.5px solid var(--accent-gold); border-radius:16px; padding:16px; margin-bottom:16px; text-align:center;">
         <div style="font-size:24px; margin-bottom:4px;">📜</div>
         <div style="font-weight:900; font-size:14px; color:var(--accent-gold);">Founder Stock Portfolio Active</div>
@@ -1333,7 +1332,7 @@
       <div style="font-size:12px; color:#cbd5e1; font-weight:700; margin-bottom:18px;">UPI ID: <b class="liveUpiText">2038@upi</b></div>
 
       <div style="text-align:left; font-size:11px; font-weight:900; color:#94a3b8; margin-bottom:4px;">ENTER 12-DIGIT UTR NO. <span style="color:#ff1744;">*REQUIRED</span></div>
-      <input type="text" id="utrNumberInput" class="input-field" placeholder="e.g. 427819203847" maxlength="12" style="text-align:center; font-size:16px; letter-spacing:3px;" />
+      <input type="text" id="utrNumberInput" class="input-field" placeholder="e.g. 427819203847" maxlength="12" style="text-align:center; font-size:16px; letter-spacing:3px; background:rgba(255,255,255,0.06); color:#fff; border-color:rgba(255,255,255,0.1);" />
 
       <button class="btn-primary" style="background:linear-gradient(135deg, var(--accent-gold), #ff8f00); color:#000; box-shadow:0 8px 24px rgba(255,171,0,0.3); margin-top:12px;" onclick="submitUtrVerification()">
         Submit for Verification
@@ -2313,39 +2312,12 @@
       } else { alert(data.message); }
     }
 
-    // ==========================================
-    // PWA SERVICE WORKER & 1-CLICK INSTALL PROMPT
-    // ==========================================
+    // Pure Native Service Worker Hook (No Custom Popups)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(() => {
-          console.log('⚡ 2038 PWA Service Worker Registered!');
-        }).catch(err => {
-          console.log('PWA Service Worker Registration failed:', err);
-        });
+        navigator.serviceWorker.register('/sw.js');
       });
     }
-
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      
-      const installPill = document.createElement('div');
-      installPill.id = 'pwaInstallPill';
-      installPill.style.cssText = 'position:fixed; top:70px; left:16px; right:16px; max-width:400px; margin:0 auto; background:linear-gradient(135deg, #111827, #1f2937); border:1.5px solid #00c853; border-radius:12px; padding:10px 16px; display:flex; justify-content:space-between; align-items:center; z-index:9999; box-shadow:0 10px 25px rgba(0,0,0,0.5); color:#fff;';
-      installPill.innerHTML = `
-        <div style="font-size:12px; font-weight:800;">📲 Install 2038 App for faster ordering</div>
-        <button id="btnPwaInstall" style="background:#00c853; color:#000; border:none; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:900; cursor:pointer;">Install</button>
-      `;
-      document.body.appendChild(installPill);
-
-      document.getElementById('btnPwaInstall').addEventListener('click', () => {
-        installPill.style.display = 'none';
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
-      });
-    });
   </script>
 </body>
 </html>

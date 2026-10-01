@@ -118,20 +118,6 @@
       border-color: #ef4444;
     }
 
-    .btn-install-header {
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--brand-green);
-      border: 1.5px solid var(--brand-green);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
     #soundAlarmBanner {
       display: none;
       background: #dc2626;
@@ -277,10 +263,6 @@
         <button class="btn-store-status status-open" id="storeStatusToggleBtn" onclick="toggleStoreStatus()">
           <span id="storeStatusIcon">🟢</span>
           <span id="storeStatusText">Store Online</span>
-        </button>
-
-        <button class="btn-install-header" id="btnAdminInstall" onclick="triggerAdminInstall()">
-          <span>📲</span> <span>Install App</span>
         </button>
 
         <button class="btn-action" title="Test Alert Ringtone" onclick="testAudioAlert()">
@@ -447,24 +429,6 @@
     let alarmAudioInterval = null;
     let currentOrdersCache = [];
     let audioContext = null;
-    let deferredAdminPrompt = null;
-
-    // Listen for native install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredAdminPrompt = e;
-      const btn = document.getElementById('btnAdminInstall');
-      if (btn) btn.style.display = 'inline-flex';
-    });
-
-    function triggerAdminInstall() {
-      if (deferredAdminPrompt) {
-        deferredAdminPrompt.prompt();
-        deferredAdminPrompt.userChoice.then(() => { deferredAdminPrompt = null; });
-      } else {
-        alert('To install 2038 Admin App:\n\n• On Mobile: Tap browser menu (⋮) and select "Install App" or "Add to Home screen".\n• On Laptop/Mac: Click the Install icon in the browser address bar.');
-      }
-    }
 
     let adminTheme = localStorage.getItem('2038_admin_theme') || 'dark';
     applyAdminTheme(adminTheme);
@@ -972,6 +936,7 @@
       } catch (e) { alert('Delete failed.'); }
     }
 
+    // Products
     async function fetchProducts() {
       const c = document.getElementById('productsListContainer');
       const res = await fetch(`${API_URL}/products`);
@@ -1031,6 +996,7 @@
       else alert(data.message);
     }
 
+    // Pincodes
     async function fetchPincodes() {
       const c = document.getElementById('pincodesListContainer');
       const res = await fetch(`${API_URL}/pincodes`, { headers: { 'x-admin-token': adminToken } });
@@ -1075,6 +1041,7 @@
       if (data.success) fetchPincodes();
     }
 
+    // Grid Stock Verification
     async function fetchGridDetails() {
       const pendingContainer = document.getElementById('pendingUtrContainer');
       try {
@@ -1204,6 +1171,7 @@
       } else { alert(data.message); }
     }
 
+    // Pure Native Service Worker Hook (No Custom Popups)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');
