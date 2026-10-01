@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -20,7 +21,7 @@ app.use(express.static(path.join(__dirname)));
 // ==========================================
 // 1. MONGODB ATLAS CONNECTION
 // ==========================================
-const MONGO_URI = 'mongodb+srv://priyanshuprasad7777_db_user:VzwM6qscOC7Tp14h@cluster0.2vvbj0t.mongodb.net/2038_store?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://priyanshuprasad7777_db_user:VzwM6qscOC7Tp14h@cluster0.2vvbj0t.mongodb.net/2038_store?retryWrites=true&w=majority&appName=Cluster0';
 
 mongoose.connect(MONGO_URI, {
   serverSelectionTimeoutMS: 5000,
@@ -38,21 +39,36 @@ mongoose.connect(MONGO_URI, {
 // 2. SCHEMAS & MODELS
 // ==========================================
 
-// Store Config Schema
 const configSchema = new mongoose.Schema({
   key: { type: String, required: true, unique: true },
   value: { type: String, required: true }
 });
 const Config = mongoose.model('Config', configSchema);
 
-// Admin Auth Schema
+const couponSchema = new mongoose.Schema({
+  code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+  type: { type: String, default: 'FLAT' },
+  value: { type: Number, required: true },
+  minOrder: { type: Number, default: 0 },
+  isActive: { type: Boolean, default: true },
+  createdAt: { type: Date, default: Date.now }
+});
+const Coupon = mongoose.model('Coupon', couponSchema);
+
 const adminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true }
 });
 const Admin = mongoose.model('Admin', adminSchema);
 
-// Customer User Schema
+const riderSchema = new mongoose.Schema({
+  riderId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  passwordHash: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+const Rider = mongoose.model('Rider', riderSchema);
+
 const userSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
@@ -65,11 +81,10 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// 2038 Stock Grid Box Schema
 const gridBoxSchema = new mongoose.Schema({
   boxNumber: { type: Number, required: true, unique: true },
   price: { type: Number, default: 100 },
-  status: { type: String, default: 'available' }, // 'available', 'pending', 'owned'
+  status: { type: String, default: 'available' },
   ownerPhone: { type: String, default: null },
   ownerName: { type: String, default: null },
   utrNumber: { type: String, default: null },
@@ -77,7 +92,6 @@ const gridBoxSchema = new mongoose.Schema({
 });
 const GridBox = mongoose.model('GridBox', gridBoxSchema);
 
-// Grid Stock UTR Purchase Request Schema
 const gridRequestSchema = new mongoose.Schema({
   requestId: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
@@ -85,18 +99,16 @@ const gridRequestSchema = new mongoose.Schema({
   boxNumbers: [{ type: Number, required: true }],
   totalAmount: { type: Number, required: true },
   utrNumber: { type: String, required: true },
-  status: { type: String, default: 'Pending' }, // 'Pending', 'Approved', 'Rejected'
+  status: { type: String, default: 'Pending' },
   createdAt: { type: Date, default: Date.now }
 });
 const GridRequest = mongoose.model('GridRequest', gridRequestSchema);
 
-// Pincode Schema
 const pincodeSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true }
 });
 const Pincode = mongoose.model('Pincode', pincodeSchema);
 
-// Product Schema
 const productSchema = new mongoose.Schema({
   name: { type: String, required: true },
   category: { type: String, default: 'General' },
@@ -108,7 +120,6 @@ const productSchema = new mongoose.Schema({
 });
 const Product = mongoose.model('Product', productSchema);
 
-// Order Schema
 const orderSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
   userId: { type: String },
@@ -116,6 +127,8 @@ const orderSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   address: { type: String, required: true },
   pincode: { type: String, required: true },
+  latitude: { type: Number, default: null },
+  longitude: { type: Number, default: null },
   items: [{
     productId: { type: String, required: true },
     productName: { type: String },
@@ -124,10 +137,13 @@ const orderSchema = new mongoose.Schema({
     quantity: { type: Number, default: 1 }
   }],
   totalAmount: { type: Number, required: true },
+  discountAmount: { type: Number, default: 0 },
+  couponApplied: { type: String, default: '' },
   paymentMethod: { type: String, default: 'COD' },
   paymentStatus: { type: String, default: 'Pending' },
   utrNumber: { type: String, default: '' },
   orderStatus: { type: String, default: 'Placed' },
+  deliveredAt: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 const Order = mongoose.model('Order', orderSchema);
@@ -144,9 +160,40 @@ async function initializeDefaults() {
       console.log('🔐 Default Admin Initialized: admin / 2038@admin');
     }
 
+    const riderExists = await Rider.findOne({ riderId: 'rider' });
+    if (!riderExists) {
+      await Rider.create({
+        riderId: 'rider',
+        name: 'Primary Delivery Partner',
+        passwordHash: hashSecret('2038@rider')
+      });
+      console.log('🛵 Default Rider Initialized: rider / 2038@rider');
+    }
+
     const upiExists = await Config.findOne({ key: 'upi_id' });
     if (!upiExists) {
       await Config.create({ key: 'upi_id', value: '2038@upi' });
+    }
+
+    const storeStatusExists = await Config.findOne({ key: 'store_status' });
+    if (!storeStatusExists) {
+      await Config.create({ key: 'store_status', value: 'OPEN' });
+    }
+
+    const supportPhoneExists = await Config.findOne({ key: 'support_phone' });
+    if (!supportPhoneExists) {
+      await Config.create({ key: 'support_phone', value: '9123456789' });
+    }
+
+    const welcomeCoupon = await Coupon.findOne({ code: 'WELCOME50' });
+    if (!welcomeCoupon) {
+      await Coupon.create({
+        code: 'WELCOME50',
+        type: 'FLAT',
+        value: 50,
+        minOrder: 149,
+        isActive: true
+      });
     }
 
     const boxCount = await GridBox.countDocuments();
@@ -188,12 +235,86 @@ const verifyAdminToken = async (req, res, next) => {
   }
 };
 
+// Middleware: Rider Token Verification
+const verifyRiderToken = async (req, res, next) => {
+  const token = req.headers['x-rider-token'];
+  if (!token) return res.status(401).json({ success: false, message: 'Rider authentication required.' });
+
+  try {
+    const [id, hash] = token.split(':::');
+    const rider = await Rider.findOne({ riderId: id });
+    if (rider && rider.passwordHash === hash) {
+      req.rider = rider;
+      return next();
+    }
+    return res.status(401).json({ success: false, message: 'Rider session expired.' });
+  } catch (err) {
+    return res.status(401).json({ success: false, message: 'Invalid rider token.' });
+  }
+};
+
 // ==========================================
-// 3. ROUTES & APIS
+// 3. STATIC & PWA ROUTES
 // ==========================================
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/rider', (req, res) => res.sendFile(path.join(__dirname, 'rider.html')));
+
+// Explicit PWA Service Worker & Manifest Endpoints with Headers
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, 'sw.js'));
+});
+
+app.get('/manifest.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.sendFile(path.join(__dirname, 'manifest.json'));
+});
+
+// ==========================================
+// 4. API ROUTES
+// ==========================================
+
+// Store Config & Support Phone APIs
+app.get('/api/config/store-status', async (req, res) => {
+  try {
+    const cfg = await Config.findOne({ key: 'store_status' });
+    res.json({ success: true, status: cfg ? cfg.value : 'OPEN' });
+  } catch (e) {
+    res.json({ success: true, status: 'OPEN' });
+  }
+});
+
+app.post('/api/admin/config/store-status', verifyAdminToken, async (req, res) => {
+  try {
+    const { status } = req.body;
+    await Config.findOneAndUpdate({ key: 'store_status' }, { value: status }, { upsert: true });
+    res.json({ success: true, status, message: `Store is now ${status}!` });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to update store status.' });
+  }
+});
+
+app.get('/api/config/support-phone', async (req, res) => {
+  try {
+    const cfg = await Config.findOne({ key: 'support_phone' });
+    res.json({ success: true, phone: cfg ? cfg.value : '9123456789' });
+  } catch (e) {
+    res.json({ success: true, phone: '9123456789' });
+  }
+});
+
+app.post('/api/admin/config/support-phone', verifyAdminToken, async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ success: false, message: 'Phone required.' });
+    await Config.findOneAndUpdate({ key: 'support_phone' }, { value: String(phone).trim() }, { upsert: true });
+    res.json({ success: true, message: 'Store helpline number updated.' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to update helpline number.' });
+  }
+});
 
 app.get('/api/config/upi', async (req, res) => {
   try {
@@ -215,7 +336,94 @@ app.post('/api/admin/config/upi', verifyAdminToken, async (req, res) => {
   }
 });
 
-// Admin Authentication
+// Coupons
+app.post('/api/coupons/apply', async (req, res) => {
+  try {
+    const { code, cartTotal } = req.body;
+    const cleanCode = String(code || '').trim().toUpperCase();
+    const total = Number(cartTotal) || 0;
+
+    const coupon = await Coupon.findOne({ code: cleanCode, isActive: true });
+    if (!coupon) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired promo code.' });
+    }
+
+    if (total < coupon.minOrder) {
+      return res.status(400).json({
+        success: false,
+        message: `Code requires a minimum order of ₹${coupon.minOrder}. Add more items!`
+      });
+    }
+
+    let discount = 0;
+    if (coupon.type === 'PERCENT') {
+      discount = Math.round((total * coupon.value) / 100);
+    } else {
+      discount = coupon.value;
+    }
+
+    discount = Math.min(discount, total);
+    const finalAmount = Math.max(0, total - discount);
+
+    res.json({
+      success: true,
+      code: coupon.code,
+      discount,
+      finalAmount,
+      message: `🎉 Coupon '${coupon.code}' applied! You saved ₹${discount}.`
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to validate coupon.' });
+  }
+});
+
+app.get('/api/coupons', verifyAdminToken, async (req, res) => {
+  try {
+    const coupons = await Coupon.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, coupons });
+  } catch (e) {
+    res.status(500).json({ success: false });
+  }
+});
+
+app.post('/api/coupons/create', verifyAdminToken, async (req, res) => {
+  try {
+    const { code, type, value, minOrder } = req.body;
+    const cleanCode = String(code || '').trim().toUpperCase();
+
+    if (!cleanCode || !value) {
+      return res.status(400).json({ success: false, message: 'Code and discount value are required.' });
+    }
+
+    const exists = await Coupon.findOne({ code: cleanCode });
+    if (exists) {
+      return res.status(400).json({ success: false, message: 'A coupon with this code already exists.' });
+    }
+
+    const newCoupon = await Coupon.create({
+      code: cleanCode,
+      type: type || 'FLAT',
+      value: Number(value),
+      minOrder: Number(minOrder) || 0,
+      isActive: true
+    });
+
+    res.status(201).json({ success: true, message: 'Coupon created successfully!', coupon: newCoupon });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to create coupon.' });
+  }
+});
+
+app.delete('/api/coupons/:code', verifyAdminToken, async (req, res) => {
+  try {
+    await Coupon.findOneAndDelete({ code: req.params.code.toUpperCase() });
+    res.json({ success: true, message: 'Coupon removed successfully.' });
+  } catch (e) {
+    res.status(500).json({ success: false });
+  }
+});
+
+// Admin Auth
 app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -250,13 +458,41 @@ app.post('/api/admin/change-credentials', verifyAdminToken, async (req, res) => 
   }
 });
 
-// Grid Stock APIs
+// Rider Auth
+app.post('/api/rider/login', async (req, res) => {
+  try {
+    const { riderId, password } = req.body;
+    const cleanId = String(riderId || '').trim();
+    const rider = await Rider.findOne({ riderId: cleanId });
+
+    if (!rider || rider.passwordHash !== hashSecret(password)) {
+      return res.status(400).json({ success: false, message: 'Invalid Rider ID or Password.' });
+    }
+
+    const token = `${rider.riderId}:::${rider.passwordHash}`;
+    res.json({ success: true, token, rider: { riderId: rider.riderId, name: rider.name } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Login failed.' });
+  }
+});
+
+// Grid Stock APIs & User Stock Portfolio
 app.get('/api/grid/boxes', async (req, res) => {
   try {
     const boxes = await GridBox.find({}).sort({ boxNumber: 1 });
     res.json({ success: true, total: boxes.length, boxes });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Database query error.' });
+  }
+});
+
+app.get('/api/grid/my-portfolio', async (req, res) => {
+  try {
+    const phone = String(req.query.phone || '').trim();
+    const boxes = await GridBox.find({ ownerPhone: phone, status: 'owned' }).sort({ boxNumber: 1 });
+    res.json({ success: true, boxes });
+  } catch (e) {
+    res.status(500).json({ success: false });
   }
 });
 
@@ -282,7 +518,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
     }
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
     if (unavailable.length > 0) {
       const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
       return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });
@@ -642,7 +878,15 @@ app.delete('/api/products/:id', verifyAdminToken, async (req, res) => {
 // Order Processing
 app.post('/api/orders/place', async (req, res) => {
   try {
-    const { customerName, phone, address, pincode, items, paymentMethod, utrNumber, userId } = req.body;
+    const storeStatusCfg = await Config.findOne({ key: 'store_status' });
+    if (storeStatusCfg && storeStatusCfg.value === 'CLOSED') {
+      return res.status(400).json({
+        success: false,
+        message: 'The store is currently closed and not accepting new orders.'
+      });
+    }
+
+    const { customerName, phone, address, pincode, items, paymentMethod, utrNumber, userId, couponCode, discountAmount, latitude, longitude } = req.body;
     const cleanPin = String(pincode).trim();
 
     const isServiceable = await Pincode.findOne({ code: cleanPin });
@@ -675,7 +919,7 @@ app.post('/api/orders/place', async (req, res) => {
       initialPayStatus = 'Pending (COD)';
     }
 
-    let totalAmount = 0;
+    let itemsTotal = 0;
     const enriched = [];
 
     for (const item of items) {
@@ -683,9 +927,12 @@ app.post('/api/orders/place', async (req, res) => {
       if (!p || p.stock < (item.quantity || 1)) return res.status(400).json({ success: false, message: 'Insufficient product inventory.' });
       p.stock -= (item.quantity || 1);
       await p.save();
-      totalAmount += p.price * (item.quantity || 1);
+      itemsTotal += p.price * (item.quantity || 1);
       enriched.push({ productId: p._id.toString(), productName: p.name, unit: p.unit, price: p.price, quantity: item.quantity || 1 });
     }
+
+    const discount = Math.min(Number(discountAmount) || 0, itemsTotal);
+    const finalBillTotal = Math.max(0, itemsTotal - discount);
 
     const orderId = `2038-${Date.now().toString().slice(-6)}`;
     const newOrder = await Order.create({
@@ -695,8 +942,12 @@ app.post('/api/orders/place', async (req, res) => {
       phone: String(phone).trim(),
       address,
       pincode: cleanPin,
+      latitude: latitude ? Number(latitude) : null,
+      longitude: longitude ? Number(longitude) : null,
       items: enriched,
-      totalAmount,
+      totalAmount: finalBillTotal,
+      discountAmount: discount,
+      couponApplied: couponCode || '',
       paymentMethod: method,
       paymentStatus: initialPayStatus,
       utrNumber: cleanUtr,
@@ -734,6 +985,50 @@ app.post('/api/orders/verify-payment', verifyAdminToken, async (req, res) => {
   }
 });
 
+// Rider APIs
+app.get('/api/rider/active-orders', verifyRiderToken, async (req, res) => {
+  try {
+    const orders = await Order.find({
+      orderStatus: { $in: ['Packed', 'Out for Delivery'] }
+    }).sort({ createdAt: 1 });
+    res.json({ success: true, orders });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error fetching rider deliveries.' });
+  }
+});
+
+app.get('/api/rider/history-orders', verifyRiderToken, async (req, res) => {
+  try {
+    const orders = await Order.find({
+      orderStatus: 'Delivered'
+    }).sort({ deliveredAt: -1, createdAt: -1 }).limit(50);
+    res.json({ success: true, orders });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Error fetching delivery history.' });
+  }
+});
+
+app.post('/api/rider/update-status', verifyRiderToken, async (req, res) => {
+  try {
+    const { orderId, status } = req.body;
+    if (!['Out for Delivery', 'Delivered'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid delivery status.' });
+    }
+
+    const updateFields = { orderStatus: status };
+    if (status === 'Delivered') {
+      updateFields.deliveredAt = new Date();
+    }
+
+    const order = await Order.findOneAndUpdate({ orderId }, updateFields, { new: true });
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
+
+    res.json({ success: true, order, message: `Order #${orderId} marked as ${status}!` });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to update order status.' });
+  }
+});
+
 app.get('/api/orders/track/:orderId', async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
@@ -765,7 +1060,10 @@ app.get('/api/orders', verifyAdminToken, async (req, res) => {
 app.patch('/api/orders/status', verifyAdminToken, async (req, res) => {
   try {
     const { orderId, status } = req.body;
-    const order = await Order.findOneAndUpdate({ orderId }, { orderStatus: status }, { new: true });
+    const updateFields = { orderStatus: status };
+    if (status === 'Delivered') updateFields.deliveredAt = new Date();
+
+    const order = await Order.findOneAndUpdate({ orderId }, updateFields, { new: true });
     if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
     res.json({ success: true, order });
   } catch (err) {

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>2038 — Admin Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,29 +31,29 @@
       --brand-green: #0c831f;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.2s, border 0.2s, color 0.2s; }
-    body { background: var(--bg); color: var(--text); padding-bottom: 60px; min-height: 100vh; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; transition: background 0.2s, border 0.2s, color 0.2s; }
+    body { background: var(--bg); color: var(--text); padding-bottom: 40px; min-height: 100vh; }
 
-    .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
     .login-card {
       background: var(--card-bg);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 32px;
+      padding: 24px;
       width: 100%;
-      max-width: 400px;
+      max-width: 380px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
     }
     .input-field {
       width: 100%;
       background: var(--inner-card);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 12px 14px;
+      padding: 11px 13px;
       border-radius: 8px;
-      font-size: 14px;
-      margin-bottom: 12px;
+      font-size: 13px;
+      margin-bottom: 10px;
       outline: none;
     }
     .input-field:focus { border-color: var(--brand-green); }
@@ -62,9 +62,9 @@
       background: var(--brand-green);
       color: #fff;
       border: none;
-      padding: 14px;
+      padding: 12px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       cursor: pointer;
     }
@@ -72,24 +72,72 @@
     .admin-nav {
       background: var(--card-bg);
       border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
+      padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       position: sticky;
       top: 0;
       z-index: 100;
+      gap: 10px;
+      flex-wrap: wrap;
     }
-    .admin-brand { font-size: 22px; font-weight: 900; letter-spacing: -1px; }
+    @media (min-width: 768px) { .admin-nav { padding: 14px 24px; } }
+    .admin-brand { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; }
+    @media (min-width: 768px) { .admin-brand { font-size: 22px; } }
     .admin-brand span { color: var(--brand-green); }
+
+    .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .btn-store-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+    }
+    .status-open {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border-color: #10b981;
+    }
+    .status-closed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border-color: #ef4444;
+    }
+
+    #soundAlarmBanner {
+      display: none;
+      background: #dc2626;
+      color: #fff;
+      padding: 10px 16px;
+      text-align: center;
+      font-weight: 900;
+      font-size: 13px;
+      position: sticky;
+      top: 55px;
+      z-index: 99;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+      animation: flashAlarm 1s infinite alternate;
+    }
+    @keyframes flashAlarm {
+      from { background: #dc2626; }
+      to { background: #b91c1c; }
+    }
 
     .btn-theme-admin {
       background: var(--inner-card);
       border: 1px solid var(--border);
       color: var(--text);
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 16px;
+      font-size: 11px;
       font-weight: 800;
       cursor: pointer;
       display: flex;
@@ -97,63 +145,101 @@
       gap: 4px;
     }
 
-    .dashboard-container { max-width: 1200px; margin: 24px auto; padding: 0 20px; }
-    .nav-tabs { display: flex; gap: 10px; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; overflow-x: auto; }
+    .dashboard-container { max-width: 1200px; margin: 12px auto; padding: 0 12px; }
+    @media (min-width: 768px) { .dashboard-container { margin: 20px auto; padding: 0 20px; } }
+
+    .nav-tabs { 
+      display: flex; 
+      gap: 8px; 
+      margin-bottom: 16px; 
+      border-bottom: 1px solid var(--border); 
+      padding-bottom: 10px; 
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    
     .nav-btn {
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text-muted);
-      padding: 8px 18px;
+      padding: 7px 12px;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .nav-btn.active { background: var(--brand-green); color: #fff; border-color: var(--brand-green); }
 
     .panel-section { display: none; }
     .panel-section.active { display: block; }
 
-    .panel-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
-    .panel-header { font-size: 16px; font-weight: 800; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .panel-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    @media (min-width: 768px) { .panel-card { padding: 20px; margin-bottom: 20px; } }
+    .panel-header { font-size: 14px; font-weight: 800; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
 
-    .order-card { background: var(--inner-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
-    .order-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-    .order-id { font-size: 15px; font-weight: 800; color: var(--brand-yellow); }
-    .order-actions { display: flex; gap: 8px; align-items: center; }
+    .order-card { background: var(--inner-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+    .order-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+    .order-id { font-size: 14px; font-weight: 800; color: var(--brand-yellow); }
+    .order-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
     
-    .badge-status { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; }
+    .badge-status { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 16px; }
     .status-Placed { background: #166534; color: #bbf7d0; }
     .status-Packed { background: #3730a3; color: #c7d2fe; }
     .status-Delivered { background: #065f46; color: #d1fae5; }
     .status-Cancelled { background: #991b1b; color: #fecaca; }
     .status-Payment-Review { background: #854d0e; color: #fef08a; }
 
-    .btn-action { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-action { background: var(--card-bg); border: 1px solid var(--border); color: var(--text); padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; }
     .btn-danger { background: #7f1d1d; border: 1px solid #991b1b; color: #fecaca; }
     .btn-danger:hover { background: var(--danger); color: #fff; }
     .btn-success { background: #065f46; border: 1px solid #047857; color: #a7f3d0; }
     .btn-success:hover { background: var(--brand-green); color: #fff; }
-    .btn-delete-icon { background: transparent; border: none; color: #ef4444; font-size: 16px; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
-    .btn-delete-icon:hover { background: rgba(239, 68, 68, 0.2); }
+    .btn-print { background: #1e293b; border: 1px solid #334155; color: #38bdf8; }
+    .btn-print:hover { background: #0284c7; color: #fff; }
+    .btn-wa { background: #064e3b; border: 1px solid #047857; color: #6ee7b7; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+    .btn-wa:hover { background: #059669; color: #fff; }
+    
+    .btn-delete-icon { background: transparent; border: none; color: #ef4444; font-size: 15px; cursor: pointer; padding: 3px 5px; border-radius: 4px; }
 
-    .prod-grid-admin { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-    .prod-card-admin { background: var(--inner-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; position: relative; }
-    .prod-card-admin img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
-    .prod-del-btn { position: absolute; top: 18px; right: 18px; background: rgba(0,0,0,0.8); border: 1px solid var(--danger); color: var(--danger); border-radius: 6px; padding: 4px 8px; cursor: pointer; }
+    .prod-grid-admin { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+    @media (min-width: 768px) { .prod-grid-admin { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; } }
+    .prod-card-admin { background: var(--inner-card); border: 1px solid var(--border); border-radius: 10px; padding: 10px; position: relative; }
+    .prod-card-admin img { width: 100%; height: 95px; object-fit: cover; border-radius: 6px; margin-bottom: 6px; }
+    .prod-del-btn { position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.8); border: 1px solid var(--danger); color: var(--danger); border-radius: 5px; padding: 3px 6px; font-size: 11px; cursor: pointer; }
 
-    .pincode-wrap { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-    .pincode-tag { background: var(--inner-card); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+    .pincode-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .pincode-tag { background: var(--inner-card); border: 1px solid var(--border); padding: 5px 10px; border-radius: 16px; display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printableReceiptArea, #printableReceiptArea * { visibility: visible; }
+      #printableReceiptArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 76mm;
+        font-family: monospace;
+        font-size: 11px;
+        color: #000;
+        background: #fff;
+        padding: 5mm;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Login Section -->
+  <div id="printableReceiptArea" style="display:none;"></div>
+
   <div id="loginSection" class="login-container">
     <div class="login-card">
-      <div style="font-size:36px; margin-bottom:10px;">🔐</div>
-      <h2 style="font-size:22px; font-weight:900; margin-bottom:4px;">2038 Administration</h2>
-      <p style="font-size:13px; color:var(--text-muted); margin-bottom:20px;">Enter Administrative Credentials</p>
+      <div style="font-size:32px; margin-bottom:8px;">🔐</div>
+      <h2 style="font-size:20px; font-weight:900; margin-bottom:4px;">2038 Administration</h2>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Enter Administrative Credentials</p>
 
       <input type="text" id="adminUser" class="input-field" placeholder="Admin Username (Default: admin)" />
       <input type="password" id="adminPass" class="input-field" placeholder="Admin Password (Default: 2038@admin)" />
@@ -161,46 +247,80 @@
     </div>
   </div>
 
-  <!-- Dashboard Section -->
   <div id="dashboardSection" style="display:none;">
     <div class="admin-nav">
-      <div class="admin-brand">20<span>38</span> Administration</div>
-      <div style="display:flex; align-items:center; gap:10px;">
-        <button class="btn-theme-admin" id="adminThemeToggleBtn" onclick="toggleAdminTheme()">
-          <span id="adminThemeIcon">☀️</span>
-          <span id="adminThemeText">Light</span>
+      <div class="admin-brand">20<span>38</span> Admin</div>
+      
+      <div class="nav-actions">
+        <button class="btn-store-status status-open" id="storeStatusToggleBtn" onclick="toggleStoreStatus()">
+          <span id="storeStatusIcon">🟢</span>
+          <span id="storeStatusText">Store Online</span>
         </button>
 
-        <span style="font-size:13px; color:var(--text-muted);" id="loggedInUserDisplay">Logged as admin</span>
-        <button class="btn-action btn-danger" onclick="logoutAdmin()">Logout</button>
+        <button class="btn-theme-admin" id="adminThemeToggleBtn" onclick="toggleAdminTheme()">
+          <span id="adminThemeIcon">☀️</span>
+        </button>
+
+        <span style="font-size:11px; color:var(--text-muted); max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="loggedInUserDisplay">admin</span>
+        <button class="btn-action btn-danger" style="padding:4px 8px; font-size:11px;" onclick="logoutAdmin()">Logout</button>
       </div>
+    </div>
+
+    <div id="soundAlarmBanner">
+      🚨 NEW ORDER RECEIVED! 
+      <button onclick="stopIncomingAlarm()" style="background:#fff; color:#dc2626; border:none; padding:4px 10px; border-radius:6px; font-weight:900; margin-left:10px; cursor:pointer;">
+        🔕 Mute & Acknowledge
+      </button>
     </div>
 
     <div class="dashboard-container">
       <div class="nav-tabs">
-        <button class="nav-btn active" onclick="switchTab('ordersTab', this)">📦 Orders & Payment Review</button>
-        <button class="nav-btn" onclick="switchTab('productsTab', this)">🛍 Products Catalog</button>
-        <button class="nav-btn" onclick="switchTab('pincodesTab', this)">📍 Postal Delivery Areas</button>
-        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Grid Stock & UTR Verification</button>
-        <button class="nav-btn" onclick="switchTab('settingsTab', this)">⚙ Settings & Credentials</button>
+        <button class="nav-btn active" onclick="switchTab('ordersTab', this)">📦 Orders & Review</button>
+        <button class="nav-btn" onclick="switchTab('couponsTab', this)">🏷️ Promo Codes</button>
+        <button class="nav-btn" onclick="switchTab('productsTab', this)">🛍 Products</button>
+        <button class="nav-btn" onclick="switchTab('pincodesTab', this)">📍 Postal Hubs</button>
+        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Grid Stock & UTR</button>
+        <button class="nav-btn" onclick="switchTab('settingsTab', this)">⚙ Settings</button>
       </div>
 
       <!-- Tab 1: Orders -->
       <div id="ordersTab" class="panel-section active">
         <div class="panel-card">
           <div class="panel-header">
-            <span>Customer Orders & Verification</span>
+            <span>Customer Orders</span>
             <button class="btn-action" onclick="fetchOrders()">🔄 Refresh</button>
           </div>
           <div id="ordersListContainer">Loading orders...</div>
         </div>
       </div>
 
-      <!-- Tab 2: Products -->
+      <!-- Tab 2: Promo Codes -->
+      <div id="couponsTab" class="panel-section">
+        <div class="panel-card">
+          <div class="panel-header">Create New Promo Code</div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:8px;">
+            <input type="text" id="couponCodeInputAdmin" class="input-field" placeholder="Code (e.g. FLAT30)" style="text-transform:uppercase;" />
+            <select id="couponTypeSelect" class="input-field">
+              <option value="FLAT">Flat Discount (₹)</option>
+              <option value="PERCENT">Percentage (%)</option>
+            </select>
+            <input type="number" id="couponValueInput" class="input-field" placeholder="Value (e.g. 30)" />
+            <input type="number" id="couponMinOrderInput" class="input-field" placeholder="Min Order Value (₹)" />
+          </div>
+          <button class="btn-submit" style="margin-top:6px;" onclick="submitNewCoupon()">+ Create Promo Code</button>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">Active Store Coupons</div>
+          <div id="couponsListContainer">Loading coupons...</div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Products -->
       <div id="productsTab" class="panel-section">
         <div class="panel-card">
-          <div class="panel-header">Add New Product to Catalog</div>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+          <div class="panel-header">Add New Product</div>
+          <div style="display:grid; grid-template-columns: 1fr; gap:8px;">
             <input type="text" id="pName" class="input-field" placeholder="Product Name" />
             <select id="pCat" class="input-field">
               <option value="Drinks">Drinks</option>
@@ -208,68 +328,78 @@
               <option value="Puja">Puja</option>
               <option value="Chocolate">Chocolate</option>
             </select>
-            <input type="number" id="pPrice" class="input-field" placeholder="Unit Price (₹)" />
-            <input type="number" id="pStock" class="input-field" placeholder="Inventory Quantity" />
-            <input type="text" id="pUnit" class="input-field" placeholder="Packaging Unit (e.g. 250ml can)" />
-            <input type="text" id="pImage" class="input-field" placeholder="Image File Path (e.g. /ghee.png or Web URL)" />
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+              <input type="number" id="pPrice" class="input-field" placeholder="Price (₹)" />
+              <input type="number" id="pStock" class="input-field" placeholder="Stock Qty" />
+            </div>
+            <input type="text" id="pUnit" class="input-field" placeholder="Unit (e.g. 250ml can)" />
+            <input type="text" id="pImage" class="input-field" placeholder="Image File Path (e.g. /ghee.png)" />
           </div>
-          <button class="btn-submit" style="margin-top:8px;" onclick="submitNewProduct()">+ Add Product to 2038</button>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">💡 Pro-tip: Place product images in the <code>src/</code> directory and refer to them as <code>/filename.png</code>.</div>
+          <button class="btn-submit" style="margin-top:6px;" onclick="submitNewProduct()">+ Add Product</button>
         </div>
 
         <div class="panel-card">
-          <div class="panel-header">Active Product Catalog</div>
-          <div id="productsListContainer" class="prod-grid-admin">Loading product catalog...</div>
+          <div class="panel-header">Active Catalog</div>
+          <div id="productsListContainer" class="prod-grid-admin">Loading catalog...</div>
         </div>
       </div>
 
-      <!-- Tab 3: Pincodes -->
+      <!-- Tab 4: Pincodes -->
       <div id="pincodesTab" class="panel-section">
         <div class="panel-card">
-          <div class="panel-header">Configure Serviceable Postal Area</div>
-          <div style="display:flex; gap:10px; max-width:400px;">
-            <input type="text" id="newPincodeInput" class="input-field" placeholder="6-digit Postal Code" maxlength="6" style="margin-bottom:0;" />
-            <button class="btn-submit" style="width:auto; padding:0 20px;" onclick="addPincode()">Add</button>
+          <div class="panel-header">Add Serviceable Postal Hub</div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="newPincodeInput" class="input-field" placeholder="6-digit Pincode" maxlength="6" style="margin-bottom:0;" />
+            <button class="btn-submit" style="width:auto; padding:0 16px;" onclick="addPincode()">Add</button>
           </div>
         </div>
 
         <div class="panel-card">
-          <div class="panel-header">Currently Active Delivery Areas</div>
+          <div class="panel-header">Active Delivery Hubs</div>
           <div id="pincodesListContainer" class="pincode-wrap">Loading postal areas...</div>
         </div>
       </div>
 
-      <!-- Tab 4: Grid Stock -->
+      <!-- Tab 5: Grid Stock -->
       <div id="gridTab" class="panel-section">
         <div class="panel-card">
-          <div class="panel-header">Store UPI Identifier Configuration</div>
-          <div style="display:flex; gap:10px; max-width:480px;">
-            <input type="text" id="adminUpiInput" class="input-field" placeholder="Enter UPI ID (e.g. storename@bank)" style="margin-bottom:0;" />
-            <button class="btn-submit" style="width:auto; padding:0 20px;" onclick="saveAdminUpiId()">Save UPI</button>
+          <div class="panel-header">Store UPI Configuration</div>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="adminUpiInput" class="input-field" placeholder="UPI ID (e.g. store@bank)" style="margin-bottom:0;" />
+            <button class="btn-submit" style="width:auto; padding:0 16px;" onclick="saveAdminUpiId()">Save</button>
           </div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:8px;">Note: Ensure your primary QR scanner graphic is saved as <code>src/qr.png</code>.</div>
         </div>
 
         <div class="panel-card">
           <div class="panel-header">
-            <span>Pending Stock UTR Verification Requests</span>
+            <span>Pending Stock UTR Requests</span>
             <button class="btn-action" onclick="fetchGridDetails()">🔄 Refresh</button>
           </div>
-          <div id="pendingUtrContainer">Loading pending verification requests...</div>
+          <div id="pendingUtrContainer">Loading pending requests...</div>
         </div>
 
         <div class="panel-card">
           <div class="panel-header">
-            <span>Active Block Ownership (Verified Stakeholders)</span>
+            <span>Verified Stock Holders</span>
           </div>
-          <div id="gridStockInvestorsContainer">Loading verified ownership records...</div>
+          <div id="gridStockInvestorsContainer">Loading ownership records...</div>
         </div>
       </div>
 
-      <!-- Tab 5: Settings -->
+      <!-- Tab 6: Settings & Helpline Management -->
       <div id="settingsTab" class="panel-section">
+        <!-- Store Helpline / Manager Phone -->
+        <div class="panel-card" style="max-width:480px; margin-bottom:16px;">
+          <div class="panel-header">📞 Store Helpline & Rider SOS Contact</div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+            Delivery boys calling or sending WhatsApp SOS messages will connect to this number.
+          </p>
+          <input type="tel" id="storeHelplineInput" class="input-field" placeholder="10-digit Mobile Number" maxlength="10" />
+          <button class="btn-submit" onclick="saveStoreHelpline()">Save Helpline Number</button>
+        </div>
+
         <div class="panel-card" style="max-width:480px;">
-          <div class="panel-header">Update Administrative Credentials</div>
+          <div class="panel-header">Admin Credentials</div>
           <input type="text" id="changeAdminUser" class="input-field" placeholder="New Admin Username" />
           <input type="password" id="changeAdminPass" class="input-field" placeholder="New Admin Password" />
           <button class="btn-submit" onclick="submitChangeCredentials()">Update Credentials</button>
@@ -282,6 +412,10 @@
   <script>
     const API_URL = '/api';
     let adminToken = localStorage.getItem('2038_admin_token') || null;
+    let currentStoreStatus = 'OPEN';
+    let lastKnownOrderCount = 0;
+    let alarmAudioInterval = null;
+    let currentOrdersCache = [];
 
     let adminTheme = localStorage.getItem('2038_admin_theme') || 'dark';
     applyAdminTheme(adminTheme);
@@ -295,18 +429,53 @@
     function applyAdminTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
       const icon = document.getElementById('adminThemeIcon');
-      const text = document.getElementById('adminThemeText');
       if (theme === 'light') {
         icon.textContent = '🌙';
-        text.textContent = 'Dark';
       } else {
         icon.textContent = '☀️';
-        text.textContent = 'Light';
       }
     }
 
     if (adminToken) {
       showDashboard();
+    }
+
+    function playOrderChime() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.15);
+        osc.frequency.setValueAtTime(1174.66, audioCtx.currentTime + 0.3);
+
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.6);
+      } catch (e) {}
+    }
+
+    function triggerIncomingAlarm() {
+      document.getElementById('soundAlarmBanner').style.display = 'block';
+      if (!alarmAudioInterval) {
+        playOrderChime();
+        alarmAudioInterval = setInterval(playOrderChime, 1500);
+      }
+    }
+
+    function stopIncomingAlarm() {
+      document.getElementById('soundAlarmBanner').style.display = 'none';
+      if (alarmAudioInterval) {
+        clearInterval(alarmAudioInterval);
+        alarmAudioInterval = null;
+      }
     }
 
     async function submitAdminLogin() {
@@ -335,15 +504,21 @@
     function showDashboard() {
       document.getElementById('loginSection').style.display = 'none';
       document.getElementById('dashboardSection').style.display = 'block';
-      document.getElementById('loggedInUserDisplay').textContent = `Authenticated as ${localStorage.getItem('2038_admin_user') || 'admin'}`;
+      document.getElementById('loggedInUserDisplay').textContent = `${localStorage.getItem('2038_admin_user') || 'admin'}`;
+      fetchStoreStatus();
       fetchOrders();
+      fetchCoupons();
       fetchProducts();
       fetchPincodes();
       fetchGridDetails();
       loadAdminUpi();
+      loadStoreHelpline();
+
+      setInterval(pollForNewOrders, 5000);
     }
 
     function logoutAdmin() {
+      stopIncomingAlarm();
       localStorage.removeItem('2038_admin_token');
       localStorage.removeItem('2038_admin_user');
       location.reload();
@@ -354,6 +529,73 @@
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       btn.classList.add('active');
+    }
+
+    async function fetchStoreStatus() {
+      try {
+        const res = await fetch(`${API_URL}/config/store-status`);
+        const data = await res.json();
+        currentStoreStatus = data.status || 'OPEN';
+        updateStoreStatusUI();
+      } catch (e) {}
+    }
+
+    function updateStoreStatusUI() {
+      const btn = document.getElementById('storeStatusToggleBtn');
+      const icon = document.getElementById('storeStatusIcon');
+      const text = document.getElementById('storeStatusText');
+      if (currentStoreStatus === 'OPEN') {
+        btn.className = 'btn-store-status status-open';
+        icon.textContent = '🟢';
+        text.textContent = 'Store Online';
+      } else {
+        btn.className = 'btn-store-status status-closed';
+        icon.textContent = '🔴';
+        text.textContent = 'Store Closed';
+      }
+    }
+
+    async function toggleStoreStatus() {
+      const nextStatus = currentStoreStatus === 'OPEN' ? 'CLOSED' : 'OPEN';
+      if (!confirm(`Are you sure you want to mark the store as ${nextStatus}?`)) return;
+
+      try {
+        const res = await fetch(`${API_URL}/admin/config/store-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ status: nextStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          currentStoreStatus = nextStatus;
+          updateStoreStatusUI();
+          alert(data.message);
+        } else alert(data.message);
+      } catch (e) { alert('Failed to update status.'); }
+    }
+
+    async function loadStoreHelpline() {
+      try {
+        const res = await fetch(`${API_URL}/config/support-phone`);
+        const data = await res.json();
+        if (data.phone) document.getElementById('storeHelplineInput').value = data.phone;
+      } catch (e) {}
+    }
+
+    async function saveStoreHelpline() {
+      const phone = document.getElementById('storeHelplineInput').value.trim();
+      if (!phone || phone.length !== 10) return alert('Please enter a valid 10-digit phone number.');
+
+      try {
+        const res = await fetch(`${API_URL}/admin/config/support-phone`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ phone })
+        });
+        const data = await res.json();
+        if (data.success) alert('✅ Store helpline updated! Riders will now contact ' + phone);
+        else alert(data.message);
+      } catch (e) { alert('Failed to update helpline number.'); }
     }
 
     async function loadAdminUpi() {
@@ -375,12 +617,94 @@
           body: JSON.stringify({ upiId: upi })
         });
         const data = await res.json();
-        if (data.success) alert('Store UPI configuration saved successfully.');
+        if (data.success) alert('Store UPI configuration saved.');
         else alert(data.message);
       } catch (e) { alert('Failed to save UPI identifier.'); }
     }
 
-    // Orders Management with Direct Payment Verification Actions
+    async function fetchCoupons() {
+      const c = document.getElementById('couponsListContainer');
+      try {
+        const res = await fetch(`${API_URL}/coupons`, { headers: { 'x-admin-token': adminToken } });
+        const data = await res.json();
+        const coupons = data.coupons || [];
+
+        if (coupons.length === 0) {
+          c.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No active promo codes.</p>';
+          return;
+        }
+
+        c.innerHTML = '';
+        coupons.forEach(cp => {
+          const row = document.createElement('div');
+          row.style.cssText = 'background:var(--inner-card); border:1px solid var(--border); border-radius:8px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;';
+          const discountDesc = cp.type === 'PERCENT' ? `${cp.value}% OFF` : `₹${cp.value} FLAT OFF`;
+          row.innerHTML = `
+            <div>
+              <b style="font-size:14px; color:var(--brand-yellow); letter-spacing:1px;">${cp.code}</b>
+              <span style="font-size:11px; margin-left:8px; color:var(--brand-green); font-weight:800;">${discountDesc}</span>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Min Order: ₹${cp.minOrder}</div>
+            </div>
+            <button class="btn-delete-icon" title="Delete Coupon" onclick="deleteCoupon('${cp.code}')">🗑</button>
+          `;
+          c.appendChild(row);
+        });
+      } catch (e) { c.innerHTML = '<p style="color:red; font-size:12px;">Error fetching coupons.</p>'; }
+    }
+
+    async function submitNewCoupon() {
+      const code = document.getElementById('couponCodeInputAdmin').value.trim();
+      const type = document.getElementById('couponTypeSelect').value;
+      const value = document.getElementById('couponValueInput').value;
+      const minOrder = document.getElementById('couponMinOrderInput').value;
+
+      if (!code || !value) return alert('Code and value are required!');
+
+      try {
+        const res = await fetch(`${API_URL}/coupons/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ code, type, value, minOrder })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ ' + data.message);
+          document.getElementById('couponCodeInputAdmin').value = '';
+          document.getElementById('couponValueInput').value = '';
+          document.getElementById('couponMinOrderInput').value = '';
+          fetchCoupons();
+        } else alert(data.message);
+      } catch (e) { alert('Failed to create coupon.'); }
+    }
+
+    async function deleteCoupon(code) {
+      if (!confirm(`Delete promo code ${code}?`)) return;
+      try {
+        const res = await fetch(`${API_URL}/coupons/${code}`, {
+          method: 'DELETE',
+          headers: { 'x-admin-token': adminToken }
+        });
+        const data = await res.json();
+        if (data.success) fetchCoupons();
+      } catch (e) { alert('Delete failed.'); }
+    }
+
+    async function pollForNewOrders() {
+      if (!adminToken) return;
+      try {
+        const res = await fetch(`${API_URL}/orders`, { headers: { 'x-admin-token': adminToken } });
+        const data = await res.json();
+        if (data.success) {
+          const orders = data.orders || [];
+          if (lastKnownOrderCount > 0 && orders.length > lastKnownOrderCount) {
+            triggerIncomingAlarm();
+            fetchOrders();
+          }
+          lastKnownOrderCount = orders.length;
+        }
+      } catch (e) {}
+    }
+
     async function fetchOrders() {
       const c = document.getElementById('ordersListContainer');
       try {
@@ -389,8 +713,11 @@
         if (!data.success) return logoutAdmin();
 
         const orders = data.orders || [];
+        currentOrdersCache = orders;
+        lastKnownOrderCount = orders.length;
+
         if (orders.length === 0) {
-          c.innerHTML = '<p style="color:var(--text-muted);">No orders recorded yet.</p>';
+          c.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No orders recorded yet.</p>';
           return;
         }
 
@@ -401,22 +728,22 @@
           
           let itemsText = o.items.map(it => `• ${it.productName} (${it.quantity}x) — ₹${it.price * it.quantity}`).join('<br>');
 
-          let paymentTag = `<span style="color:var(--brand-yellow); font-weight:800;">Cash On Delivery (COD)</span>`;
+          let paymentTag = `<span style="color:var(--brand-yellow); font-weight:800;">COD</span>`;
           let verificationActionButtons = '';
 
           if (o.paymentMethod === 'UPI_QR') {
             paymentTag = `
-              <span style="color:#38bdf8; font-weight:800;">UPI Online (UTR: <u style="letter-spacing:1px;">${o.utrNumber || 'N/A'}</u>)</span>
-              <span style="margin-left:6px; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:800; ${o.paymentStatus==='Verified'?'background:#065f46;color:#a7f3d0;':'background:#854d0e;color:#fef08a;'}">${o.paymentStatus}</span>
+              <span style="color:#38bdf8; font-weight:800;">UPI (UTR: <u>${o.utrNumber || 'N/A'}</u>)</span>
+              <span style="margin-left:4px; font-size:10px; padding:2px 6px; border-radius:8px; font-weight:800; ${o.paymentStatus==='Verified'?'background:#065f46;color:#a7f3d0;':'background:#854d0e;color:#fef08a;'}">${o.paymentStatus}</span>
             `;
 
             if (o.paymentStatus === 'Pending') {
               verificationActionButtons = `
-                <div style="background:var(--border-subtle); border:1px solid var(--border); border-radius:8px; padding:8px 12px; margin:10px 0; display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:12px; color:#fde68a;">Reconcile with banking records: UTR <b>${o.utrNumber}</b></span>
+                <div style="background:var(--border-subtle); border:1px solid var(--border); border-radius:8px; padding:8px; margin:8px 0; display:flex; flex-direction:column; gap:6px;">
+                  <span style="font-size:11px; color:#fde68a;">Reconcile banking: UTR <b>${o.utrNumber}</b></span>
                   <div style="display:flex; gap:6px;">
-                    <button class="btn-action btn-success" onclick="verifyOrderPayment('${o.orderId}', 'approve')">✅ Payment Received</button>
-                    <button class="btn-action btn-danger" onclick="verifyOrderPayment('${o.orderId}', 'reject')">❌ Reject & Cancel</button>
+                    <button class="btn-action btn-success" style="flex:1;" onclick="verifyOrderPayment('${o.orderId}', 'approve')">✅ Received</button>
+                    <button class="btn-action btn-danger" style="flex:1;" onclick="verifyOrderPayment('${o.orderId}', 'reject')">❌ Reject</button>
                   </div>
                 </div>
               `;
@@ -424,53 +751,112 @@
           }
 
           let formattedStatus = o.orderStatus.replace(/\s+/g, '-');
+          const waMsg = encodeURIComponent(`Hello ${o.customerName}! Your 2038 Order #${o.orderId} of ₹${o.totalAmount} is confirmed. Our delivery partner is dispatched and will reach you within 10-12 minutes.`);
+          const waUrl = `https://wa.me/91${o.phone}?text=${waMsg}`;
 
           card.innerHTML = `
             <div class="order-top">
               <div>
                 <span class="order-id">#${o.orderId}</span>
-                <span class="badge-status status-${formattedStatus}" style="margin-left:8px;">${o.orderStatus}</span>
-                <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${new Date(o.createdAt).toLocaleString()}</div>
+                <span class="badge-status status-${formattedStatus}" style="margin-left:4px;">${o.orderStatus}</span>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">${new Date(o.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
               </div>
               <div class="order-actions">
-                <select onchange="updateOrderStatus('${o.orderId}', this.value)" style="background:var(--card-bg); color:var(--text); border:1px solid var(--border); padding:6px; border-radius:6px; font-size:12px;">
-                  <option value="Payment Review" ${o.orderStatus==='Payment Review'?'selected':''}>Payment Review</option>
+                <select onchange="updateOrderStatus('${o.orderId}', this.value)" style="background:var(--card-bg); color:var(--text); border:1px solid var(--border); padding:4px 6px; border-radius:6px; font-size:11px;">
+                  <option value="Payment Review" ${o.orderStatus==='Payment Review'?'selected':''}>Review</option>
                   <option value="Placed" ${o.orderStatus==='Placed'?'selected':''}>Placed</option>
                   <option value="Packed" ${o.orderStatus==='Packed'?'selected':''}>Packed</option>
-                  <option value="Out for Delivery" ${o.orderStatus==='Out for Delivery'?'selected':''}>Out for Delivery</option>
+                  <option value="Out for Delivery" ${o.orderStatus==='Out for Delivery'?'selected':''}>Out</option>
                   <option value="Delivered" ${o.orderStatus==='Delivered'?'selected':''}>Delivered</option>
                   <option value="Cancelled" ${o.orderStatus==='Cancelled'?'selected':''}>Cancelled</option>
                 </select>
 
-                ${o.orderStatus !== 'Cancelled' ? `<button class="btn-action btn-danger" onclick="cancelFakeOrder('${o.orderId}')">❌ Cancel</button>` : ''}
-                <button class="btn-delete-icon" title="Permanently Delete Order" onclick="deleteOrderPermanently('${o.orderId}')">🗑</button>
+                <button class="btn-action btn-print" title="Print Thermal Bill / Receipt" onclick="printThermalReceipt('${o.orderId}')">🖨️ Print</button>
+                <a href="${waUrl}" target="_blank" class="btn-wa" title="Send WhatsApp Update">💬 WA</a>
+
+                ${o.orderStatus !== 'Cancelled' ? `<button class="btn-action btn-danger" style="padding:4px 6px; font-size:11px;" onclick="cancelFakeOrder('${o.orderId}')">Cancel</button>` : ''}
+                <button class="btn-delete-icon" title="Delete" onclick="deleteOrderPermanently('${o.orderId}')">🗑</button>
               </div>
             </div>
 
             ${verificationActionButtons}
 
-            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; font-size:12px;">
               <div>
                 <div style="font-weight:800; color:var(--text);">👤 ${o.customerName} (+91 ${o.phone})</div>
-                <div style="color:var(--text-muted); margin-top:2px;">📍 ${o.address} (PIN: ${o.pincode})</div>
-                <div style="margin-top:4px; font-size:12px;">Payment: ${paymentTag}</div>
+                <div style="color:var(--text-muted); margin-top:2px;">📍 ${o.address} (${o.pincode}) ${o.latitude ? '🎯 GPS Locked' : ''}</div>
+                <div style="margin-top:2px; font-size:11px;">Payment: ${paymentTag}</div>
               </div>
               <div style="text-align:right;">
-                <div style="font-size:16px; font-weight:900; color:var(--brand-yellow);">Total: ₹${o.totalAmount}</div>
+                <div style="font-size:14px; font-weight:900; color:var(--brand-yellow);">₹${o.totalAmount}</div>
+                ${o.couponApplied ? `<div style="font-size:10px; color:var(--brand-green); font-weight:800;">Saved ₹${o.discountAmount} (${o.couponApplied})</div>` : ''}
               </div>
             </div>
 
-            <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); font-size:13px; color:var(--text-muted);">
+            <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--border); font-size:11px; color:var(--text-muted);">
               ${itemsText}
             </div>
           `;
           c.appendChild(card);
         });
-      } catch (e) { c.innerHTML = '<p style="color:red;">Error retrieving order records.</p>'; }
+      } catch (e) { c.innerHTML = '<p style="color:red; font-size:12px;">Error retrieving orders.</p>'; }
+    }
+
+    function printThermalReceipt(orderId) {
+      const order = currentOrdersCache.find(x => x.orderId === orderId);
+      if (!order) return alert('Order record not found!');
+
+      const printArea = document.getElementById('printableReceiptArea');
+      
+      let itemsListHtml = order.items.map(it => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+          <span>${it.productName} (${it.quantity}x)</span>
+          <b>₹${it.price * it.quantity}</b>
+        </div>
+      `).join('');
+
+      printArea.innerHTML = `
+        <div style="text-align:center; border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
+          <h2 style="margin:0; font-size:18px;">2038 STORE</h2>
+          <div style="font-size:10px;">10-MINUTE INSTANT HYPERLOCAL</div>
+          <div style="font-size:10px; margin-top:4px;">Date: ${new Date(order.createdAt).toLocaleString()}</div>
+          <div style="font-size:12px; font-weight:bold; margin-top:4px;">ORDER #${order.orderId}</div>
+        </div>
+
+        <div style="border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px; font-size:11px;">
+          <div><b>Customer:</b> ${order.customerName}</div>
+          <div><b>Phone:</b> +91 ${order.phone}</div>
+          <div><b>Address:</b> ${order.address}</div>
+          <div><b>Postal Hub:</b> ${order.pincode}</div>
+        </div>
+
+        <div style="border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
+          <div style="font-weight:bold; margin-bottom:4px;">ITEMS ORDERED:</div>
+          ${itemsListHtml}
+        </div>
+
+        <div style="border-bottom:1px dashed #000; padding-bottom:8px; margin-bottom:8px;">
+          ${order.couponApplied ? `<div style="display:flex; justify-content:space-between; font-size:11px;"><span>Discount (${order.couponApplied}):</span><span>-₹${order.discountAmount}</span></div>` : ''}
+          <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:bold; margin-top:4px;">
+            <span>FINAL TOTAL:</span>
+            <span>₹${order.totalAmount}</span>
+          </div>
+          <div style="font-size:10px; margin-top:4px;">Payment: <b>${order.paymentMethod} ${order.utrNumber ? '(UTR: ' + order.utrNumber + ')' : ''}</b></div>
+          <div style="font-size:10px;">Status: <b>${order.paymentStatus}</b></div>
+        </div>
+
+        <div style="text-align:center; font-size:10px; margin-top:8px;">
+          *** THANK YOU FOR ORDERING WITH 2038 ***
+        </div>
+      `;
+
+      printArea.style.display = 'block';
+      window.print();
+      printArea.style.display = 'none';
     }
 
     async function verifyOrderPayment(orderId, action) {
-      const msg = action === 'approve' ? `Confirm receipt of payment for Order #${orderId}?` : `Reject UTR verification and cancel Order #${orderId}?`;
+      const msg = action === 'approve' ? `Confirm payment receipt for Order #${orderId}?` : `Reject UTR and cancel Order #${orderId}?`;
       if (!confirm(msg)) return;
 
       try {
@@ -484,7 +870,7 @@
           alert(data.message);
           fetchOrders();
         } else alert(data.message);
-      } catch (e) { alert('Payment verification procedure failed.'); }
+      } catch (e) { alert('Verification procedure failed.'); }
     }
 
     async function updateOrderStatus(orderId, status) {
@@ -502,7 +888,7 @@
     }
 
     async function deleteOrderPermanently(orderId) {
-      if (!confirm(`Permanently remove Order #${orderId} from system database?`)) return;
+      if (!confirm(`Permanently remove Order #${orderId}?`)) return;
       try {
         const res = await fetch(`${API_URL}/orders/${orderId}`, {
           method: 'DELETE',
@@ -514,7 +900,7 @@
       } catch (e) { alert('Delete failed.'); }
     }
 
-    // Products Catalog
+    // Products
     async function fetchProducts() {
       const c = document.getElementById('productsListContainer');
       const res = await fetch(`${API_URL}/products`);
@@ -528,9 +914,9 @@
         card.innerHTML = `
           <button class="prod-del-btn" title="Delete Product" onclick="deleteProduct('${p.id}')">🗑</button>
           <img src="${p.image}" alt="${p.name}" />
-          <div style="font-size:14px; font-weight:800;">${p.name}</div>
-          <div style="font-size:12px; color:var(--text-muted);">${p.unit} • ${p.category}</div>
-          <div style="font-size:15px; font-weight:900; color:var(--brand-yellow); margin-top:4px;">₹${p.price} (Stock: ${p.stock})</div>
+          <div style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+          <div style="font-size:10px; color:var(--text-muted);">${p.unit} • ${p.category}</div>
+          <div style="font-size:13px; font-weight:900; color:var(--brand-yellow); margin-top:2px;">₹${p.price} (Qty: ${p.stock})</div>
         `;
         c.appendChild(card);
       });
@@ -553,7 +939,7 @@
       });
       const data = await res.json();
       if (data.success) {
-        alert('Product added to catalog successfully.');
+        alert('Product added.');
         document.getElementById('pName').value = '';
         document.getElementById('pPrice').value = '';
         document.getElementById('pStock').value = '';
@@ -564,7 +950,7 @@
     }
 
     async function deleteProduct(id) {
-      if (!confirm('Permanently remove this item from store catalog?')) return;
+      if (!confirm('Permanently remove this product?')) return;
       const res = await fetch(`${API_URL}/products/${id}`, {
         method: 'DELETE',
         headers: { 'x-admin-token': adminToken }
@@ -574,7 +960,7 @@
       else alert(data.message);
     }
 
-    // Postal Areas
+    // Pincodes
     async function fetchPincodes() {
       const c = document.getElementById('pincodesListContainer');
       const res = await fetch(`${API_URL}/pincodes`, { headers: { 'x-admin-token': adminToken } });
@@ -595,7 +981,7 @@
 
     async function addPincode() {
       const pin = document.getElementById('newPincodeInput').value.trim();
-      if (pin.length !== 6) return alert('Please enter a valid 6-digit postal code.');
+      if (pin.length !== 6) return alert('Enter valid 6-digit postal code.');
 
       const res = await fetch(`${API_URL}/pincodes/add`, {
         method: 'POST',
@@ -610,7 +996,7 @@
     }
 
     async function deletePincode(pin) {
-      if (!confirm(`Revoke delivery serviceability for postal area ${pin}?`)) return;
+      if (!confirm(`Revoke delivery serviceability for ${pin}?`)) return;
       const res = await fetch(`${API_URL}/pincodes/${pin}`, {
         method: 'DELETE',
         headers: { 'x-admin-token': adminToken }
@@ -628,28 +1014,28 @@
         const pendingRequests = (dataReq.requests || []).filter(r => r.status === 'Pending');
 
         if (pendingRequests.length === 0) {
-          pendingContainer.innerHTML = '<p style="color:var(--text-muted);">No pending UTR verification requests.</p>';
+          pendingContainer.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No pending UTR requests.</p>';
         } else {
           pendingContainer.innerHTML = '';
           pendingRequests.forEach(r => {
             const card = document.createElement('div');
-            card.style.cssText = 'background:var(--inner-card); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;';
+            card.style.cssText = 'background:var(--inner-card); border:1px solid var(--border); border-radius:8px; padding:10px; margin-bottom:8px; display:flex; flex-direction:column; gap:6px;';
             card.innerHTML = `
               <div>
-                <div style="font-weight:800; font-size:14px;">${r.customerName} (+91 ${r.phone})</div>
-                <div style="color:var(--brand-yellow); font-size:13px; margin:2px 0;">Blocks: <b>${r.boxNumbers.map(n=>'#'+n).join(', ')}</b> • Total: <b>₹${r.totalAmount}</b></div>
-                <div style="color:#38bdf8; font-size:13px; font-weight:800;">12-Digit UTR: <u style="letter-spacing:1px;">${r.utrNumber}</u></div>
+                <div style="font-weight:800; font-size:13px;">${r.customerName} (+91 ${r.phone})</div>
+                <div style="color:var(--brand-yellow); font-size:11px; margin:2px 0;">Blocks: <b>${r.boxNumbers.map(n=>'#'+n).join(', ')}</b> • Total: <b>₹${r.totalAmount}</b></div>
+                <div style="color:#38bdf8; font-size:11px; font-weight:800;">12-Digit UTR: <u>${r.utrNumber}</u></div>
               </div>
-              <div style="display:flex; gap:8px;">
-                <button class="btn-action btn-success" onclick="approveUtrRequest('${r.requestId}')">✅ Approve Allocation</button>
-                <button class="btn-action btn-danger" onclick="rejectUtrRequest('${r.requestId}')">❌ Reject / Fraud</button>
+              <div style="display:flex; gap:6px;">
+                <button class="btn-action btn-success" style="flex:1;" onclick="approveUtrRequest('${r.requestId}')">✅ Approve</button>
+                <button class="btn-action btn-danger" style="flex:1;" onclick="rejectUtrRequest('${r.requestId}')">❌ Reject</button>
               </div>
             `;
             pendingContainer.appendChild(card);
           });
         }
       } catch (e) {
-        pendingContainer.innerHTML = '<p style="color:red;">Error loading UTR requests.</p>';
+        pendingContainer.innerHTML = '<p style="color:red; font-size:12px;">Error loading UTR requests.</p>';
       }
 
       const c = document.getElementById('gridStockInvestorsContainer');
@@ -659,21 +1045,21 @@
 
       const owned = boxes.filter(b => b.status === 'owned');
       if (owned.length === 0) {
-        c.innerHTML = '<p style="color:var(--text-muted);">No verified stock block allocations recorded.</p>';
+        c.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No verified block allocations recorded.</p>';
         return;
       }
 
-      let html = `<p style="font-weight:800; margin-bottom:12px; color:var(--brand-yellow);">Total Allocated: ${owned.length} / 100 Blocks (Capital Raised: ₹${owned.length * 100})</p>`;
+      let html = `<p style="font-weight:800; margin-bottom:8px; font-size:12px; color:var(--brand-yellow);">Allocated: ${owned.length} / 100 Blocks (Capital: ₹${owned.length * 100})</p>`;
       owned.forEach(b => {
         html += `
-          <div style="background:var(--inner-card); padding:10px 14px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; border:1px solid var(--border);">
+          <div style="background:var(--inner-card); padding:8px 10px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; font-size:11px; border:1px solid var(--border);">
             <div>
-              <b>Block #${b.boxNumber}</b> — ${b.ownerName} (+91 ${b.ownerPhone})
-              <div style="font-size:11px; color:var(--text-muted);">UTR: ${b.utrNumber || 'N/A'}</div>
+              <b>#${b.boxNumber}</b> — ${b.ownerName}
+              <div style="color:var(--text-muted); font-size:10px;">UTR: ${b.utrNumber || 'N/A'}</div>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="color:var(--brand-green); font-weight:800;">₹100 Verified</span>
-              <button class="btn-delete-icon" title="Revoke Allocation" onclick="revokeBoxOwnership(${b.boxNumber})">🗑 Revoke</button>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="color:var(--brand-green); font-weight:800;">₹100</span>
+              <button class="btn-delete-icon" title="Revoke" onclick="revokeBoxOwnership(${b.boxNumber})">🗑</button>
             </div>
           </div>
         `;
@@ -682,7 +1068,7 @@
     }
 
     async function approveUtrRequest(requestId) {
-      if (!confirm(`Reconciled banking funds for Request #${requestId}? Confirm allocation?`)) return;
+      if (!confirm(`Approve allocation for Request #${requestId}?`)) return;
       try {
         const res = await fetch(`${API_URL}/grid/requests/approve`, {
           method: 'POST',
@@ -698,7 +1084,7 @@
     }
 
     async function rejectUtrRequest(requestId) {
-      if (!confirm(`Reject verification for Request #${requestId} and return block(s) to public pool?`)) return;
+      if (!confirm(`Reject Request #${requestId}?`)) return;
       try {
         const res = await fetch(`${API_URL}/grid/requests/reject`, {
           method: 'POST',
@@ -714,7 +1100,7 @@
     }
 
     async function revokeBoxOwnership(boxNumber) {
-      if (!confirm(`Revoke ownership for Block #${boxNumber} and mark as available?`)) return;
+      if (!confirm(`Revoke ownership for Block #${boxNumber}?`)) return;
       try {
         const res = await fetch(`${API_URL}/grid/revoke-box`, {
           method: 'POST',
@@ -726,7 +1112,7 @@
           alert(data.message);
           fetchGridDetails();
         } else alert(data.message);
-      } catch (e) { alert('Revocation procedure failed.'); }
+      } catch (e) { alert('Revocation failed.'); }
     }
 
     // Credentials Update
@@ -745,8 +1131,8 @@
         adminToken = data.newToken;
         localStorage.setItem('2038_admin_token', adminToken);
         localStorage.setItem('2038_admin_user', u);
-        alert('Administrative credentials updated successfully.');
-        document.getElementById('loggedInUserDisplay').textContent = `Authenticated as ${u}`;
+        alert('Credentials updated.');
+        document.getElementById('loggedInUserDisplay').textContent = `${u}`;
       } else { alert(data.message); }
     }
   </script>

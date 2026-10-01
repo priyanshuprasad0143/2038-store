@@ -1,0 +1,16 @@
+{
+  "name": "2038 — 10 Min Hyperlocal Store",
+  "short_name": "2038",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#00c853",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2300c853'/><text x='50' y='65' font-size='38' font-weight='900' fill='white' text-anchor='middle'>2038</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

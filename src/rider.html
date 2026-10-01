@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>2038 — Rider Partner</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #00c853;
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --yellow: #f8cb46;
+      --support-red: #ef4444;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --primary: #0c831f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; transition: background 0.2s, color 0.2s, border 0.2s; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+
+    .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+    .login-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+    .input-field {
+      width: 100%;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .input-field:focus { border-color: var(--primary); }
+    .btn-login {
+      width: 100%;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .rider-brand { font-size: 18px; font-weight: 900; }
+    .rider-brand span { color: var(--primary); }
+
+    .header-actions { display: flex; align-items: center; gap: 6px; }
+
+    .btn-icon {
+      background: var(--border);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-sos {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1.5px solid #ef4444;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 12px 14px; }
+
+    .tab-nav {
+      display: flex;
+      gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 4px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #000;
+    }
+
+    .order-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    .order-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 8px;
+    }
+    .order-id { font-size: 14px; font-weight: 900; color: var(--yellow); }
+    .order-status {
+      font-size: 11px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+    }
+    .status-delivered {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+    }
+
+    .customer-info { margin-bottom: 12px; }
+    .cust-name { font-size: 15px; font-weight: 800; }
+    .cust-addr { font-size: 12px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+    .items-box {
+      background: rgba(125, 125, 125, 0.05);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .btn-action {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 12px 6px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      text-align: center;
+    }
+    .btn-call { background: #0284c7; }
+    .btn-maps { background: #7c3aed; }
+    
+    .btn-deliver {
+      width: 100%;
+      background: var(--primary);
+      color: #000;
+      font-weight: 900;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-out {
+      width: 100%;
+      background: #f59e0b;
+      color: #000;
+      font-weight: 900;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      border: none;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .sos-modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .sos-modal {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- RIDER LOGIN VIEW -->
+  <div id="riderLoginView" class="login-container">
+    <div class="login-card">
+      <div style="font-size:36px; margin-bottom:8px;">🛵</div>
+      <h2 style="font-size:20px; font-weight:900; margin-bottom:4px;">2038 Delivery Partner</h2>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:18px;">Sign in to access assigned delivery orders</p>
+
+      <input type="text" id="inputRiderId" class="input-field" placeholder="Rider ID (Default: rider)" />
+      <input type="password" id="inputRiderPass" class="input-field" placeholder="Password (Default: 2038@rider)" />
+      <button class="btn-login" onclick="submitRiderLogin()">Start Duty</button>
+    </div>
+  </div>
+
+  <!-- RIDER MAIN DASHBOARD VIEW -->
+  <div id="riderDashboardView" style="display:none;">
+    <header>
+      <div class="rider-brand">20<span>38</span> Rider</div>
+      
+      <div class="header-actions">
+        <button class="btn-sos" onclick="openSosModal()">
+          <span>🆘 SOS Help</span>
+        </button>
+
+        <button class="btn-icon" id="themeToggleBtn" onclick="toggleRiderTheme()">
+          <span id="themeIcon">☀️</span>
+        </button>
+
+        <button class="btn-icon" onclick="fetchOrders()">🔄</button>
+        <button class="btn-icon" style="color:#ef4444;" onclick="logoutRider()">🚪</button>
+      </div>
+    </header>
+
+    <div class="container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <span style="font-size:12px; font-weight:800; color:var(--text-muted);" id="riderNameBadge">Partner: Primary Rider</span>
+        <span style="font-size:11px; color:var(--primary); font-weight:800;">● Active on Duty</span>
+      </div>
+
+      <div class="tab-nav">
+        <button class="tab-btn active" id="tabActiveBtn" onclick="switchRiderTab('active')">
+          🛵 Live (<span id="activeCount">0</span>)
+        </button>
+        <button class="tab-btn" id="tabHistoryBtn" onclick="switchRiderTab('history')">
+          📜 History (<span id="historyCount">0</span>)
+        </button>
+      </div>
+
+      <div id="activeOrdersView">
+        <div id="riderActiveContainer">Loading deliveries...</div>
+      </div>
+
+      <div id="historyOrdersView" style="display:none;">
+        <div id="riderHistoryContainer">Loading history...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS HELP MODAL -->
+  <div id="sosModal" class="sos-modal-overlay">
+    <div class="sos-modal">
+      <div style="font-size:36px; margin-bottom:6px;">🆘</div>
+      <h3 style="font-size:18px; font-weight:900; margin-bottom:4px;">Delivery Assistance & Helpline</h3>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:18px;">Customer not answering or facing route issues? Connect with store manager directly.</p>
+
+      <a id="sosCallLink" href="tel:9123456789" style="display:block; background:#0284c7; color:#fff; padding:12px; border-radius:10px; font-size:13px; font-weight:900; text-decoration:none; margin-bottom:10px;">
+        📞 Call Store Manager Now
+      </a>
+
+      <a id="sosWaLink" href="https://wa.me/919123456789" target="_blank" style="display:block; background:#059669; color:#fff; padding:12px; border-radius:10px; font-size:13px; font-weight:900; text-decoration:none; margin-bottom:14px;">
+        💬 Send Urgent WhatsApp SOS
+      </a>
+
+      <button onclick="closeModal('sosModal')" style="background:var(--border); color:var(--text); border:none; padding:10px; border-radius:8px; font-size:12px; font-weight:800; width:100%; cursor:pointer;">
+        Close
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = '/api';
+    let riderToken = localStorage.getItem('2038_rider_token') || null;
+    let currentRiderTab = 'active';
+    let storeHelpPhone = '9123456789';
+
+    let riderTheme = localStorage.getItem('2038_rider_theme') || 'dark';
+    applyRiderTheme(riderTheme);
+
+    function toggleRiderTheme() {
+      riderTheme = riderTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('2038_rider_theme', riderTheme);
+      applyRiderTheme(riderTheme);
+    }
+
+    function applyRiderTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      const icon = document.getElementById('themeIcon');
+      if (theme === 'light') {
+        icon.textContent = '🌙';
+      } else {
+        icon.textContent = '☀️';
+      }
+    }
+
+    if (riderToken) {
+      showRiderDashboard();
+    }
+
+    async function submitRiderLogin() {
+      const id = document.getElementById('inputRiderId').value.trim();
+      const p = document.getElementById('inputRiderPass').value.trim();
+      if (!id || !p) return alert('Enter Rider ID and Password.');
+
+      try {
+        const res = await fetch(`${API_URL}/rider/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ riderId: id, password: p })
+        });
+        const data = await res.json();
+        if (data.success) {
+          riderToken = data.token;
+          localStorage.setItem('2038_rider_token', riderToken);
+          localStorage.setItem('2038_rider_name', data.rider.name);
+          showRiderDashboard();
+        } else {
+          alert('❌ ' + data.message);
+        }
+      } catch (e) { alert('Login error.'); }
+    }
+
+    function showRiderDashboard() {
+      document.getElementById('riderLoginView').style.display = 'none';
+      document.getElementById('riderDashboardView').style.display = 'block';
+      document.getElementById('riderNameBadge').textContent = `Partner: ${localStorage.getItem('2038_rider_name') || 'Active Rider'}`;
+      fetchSupportPhone();
+      fetchOrders();
+      setInterval(fetchOrders, 10000);
+    }
+
+    function logoutRider() {
+      if (!confirm('Log out from delivery duty?')) return;
+      localStorage.removeItem('2038_rider_token');
+      localStorage.removeItem('2038_rider_name');
+      location.reload();
+    }
+
+    async function fetchSupportPhone() {
+      try {
+        const res = await fetch(`${API_URL}/config/support-phone`);
+        const data = await res.json();
+        if (data.phone) {
+          storeHelpPhone = data.phone;
+          document.getElementById('sosCallLink').href = `tel:${storeHelpPhone}`;
+          const sosMsg = encodeURIComponent(`URGENT: Delivery Partner ${localStorage.getItem('2038_rider_name') || ''} needs immediate assistance regarding an active delivery.`);
+          document.getElementById('sosWaLink').href = `https://wa.me/91${storeHelpPhone}?text=${sosMsg}`;
+        }
+      } catch (e) {}
+    }
+
+    function openSosModal() { document.getElementById('sosModal').style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function switchRiderTab(tab) {
+      currentRiderTab = tab;
+      const tabActive = document.getElementById('tabActiveBtn');
+      const tabHistory = document.getElementById('tabHistoryBtn');
+      const viewActive = document.getElementById('activeOrdersView');
+      const viewHistory = document.getElementById('historyOrdersView');
+
+      if (tab === 'active') {
+        tabActive.className = 'tab-btn active';
+        tabHistory.className = 'tab-btn';
+        viewActive.style.display = 'block';
+        viewHistory.style.display = 'none';
+      } else {
+        tabActive.className = 'tab-btn';
+        tabHistory.className = 'tab-btn active';
+        viewActive.style.display = 'none';
+        viewHistory.style.display = 'block';
+      }
+      fetchOrders();
+    }
+
+    function fetchOrders() {
+      if (currentRiderTab === 'active') {
+        fetchActiveOrders();
+      } else {
+        fetchHistoryOrders();
+      }
+    }
+
+    async function fetchActiveOrders() {
+      const container = document.getElementById('riderActiveContainer');
+      try {
+        const res = await fetch(`${API_URL}/rider/active-orders`, {
+          headers: { 'x-rider-token': riderToken }
+        });
+        const data = await res.json();
+        if (!data.success) {
+          logoutRider();
+          return;
+        }
+
+        const orders = data.orders || [];
+        document.getElementById('activeCount').textContent = orders.length;
+
+        if (orders.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div style="font-size:48px; margin-bottom:8px;">🛵</div>
+              <h3 style="font-size:16px;">No Active Deliveries</h3>
+              <p style="font-size:12px; margin-top:4px;">Waiting for store to pack new orders...</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '';
+        orders.forEach(o => {
+          const card = document.createElement('div');
+          card.className = 'order-card';
+
+          let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address + ', ' + o.pincode)}`;
+          let gpsLabel = '';
+          if (o.latitude && o.longitude) {
+            mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${o.latitude},${o.longitude}`;
+            gpsLabel = `<span style="color:var(--primary); font-weight:800; font-size:10px; margin-left:6px;">🎯 Exact GPS Pin</span>`;
+          }
+
+          let itemsText = o.items.map(it => `• ${it.productName} (${it.quantity}x)`).join('<br>');
+
+          let statusActionBtn = '';
+          if (o.orderStatus === 'Packed') {
+            statusActionBtn = `
+              <button class="btn-out" onclick="updateRiderStatus('${o.orderId}', 'Out for Delivery')">
+                🚀 Start Ride (Mark Out for Delivery)
+              </button>
+            `;
+          }
+
+          card.innerHTML = `
+            <div class="order-top">
+              <span class="order-id">#${o.orderId}</span>
+              <span class="order-status">${o.orderStatus}</span>
+            </div>
+
+            <div class="customer-info">
+              <div class="cust-name">👤 ${o.customerName}</div>
+              <div class="cust-addr">📍 ${o.address} (PIN: ${o.pincode}) ${gpsLabel}</div>
+              <div style="font-size:13px; margin-top:4px; font-weight:900; color:var(--primary);">
+                Collect: ₹${o.totalAmount} (${o.paymentMethod})
+              </div>
+            </div>
+
+            <div class="items-box">
+              <b>Packet Items:</b><br>${itemsText}
+            </div>
+
+            <div class="action-grid">
+              <a href="tel:${o.phone}" class="btn-action btn-call">📞 Call Customer</a>
+              <a href="${mapsUrl}" target="_blank" class="btn-action btn-maps">🗺️ Direct Navigation</a>
+            </div>
+
+            ${statusActionBtn}
+
+            <button class="btn-deliver" onclick="updateRiderStatus('${o.orderId}', 'Delivered')">
+              ✅ Confirm Delivered
+            </button>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        container.innerHTML = '<p style="color:red; text-align:center;">Failed to load deliveries.</p>';
+      }
+    }
+
+    async function fetchHistoryOrders() {
+      const container = document.getElementById('riderHistoryContainer');
+      try {
+        const res = await fetch(`${API_URL}/rider/history-orders`, {
+          headers: { 'x-rider-token': riderToken }
+        });
+        const data = await res.json();
+        const orders = data.orders || [];
+
+        document.getElementById('historyCount').textContent = orders.length;
+
+        if (orders.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div style="font-size:48px; margin-bottom:8px;">📜</div>
+              <h3 style="font-size:16px;">No Delivery History</h3>
+              <p style="font-size:12px; margin-top:4px;">Delivered orders will appear here.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '';
+        orders.forEach(o => {
+          const card = document.createElement('div');
+          card.className = 'order-card';
+
+          const deliveredTime = o.deliveredAt ? new Date(o.deliveredAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Delivered';
+
+          card.innerHTML = `
+            <div class="order-top">
+              <span class="order-id">#${o.orderId}</span>
+              <span class="order-status status-delivered">✅ Delivered (${deliveredTime})</span>
+            </div>
+
+            <div class="customer-info">
+              <div class="cust-name">👤 ${o.customerName}</div>
+              <div class="cust-addr">📍 ${o.address} (${o.pincode})</div>
+              <div style="font-size:12px; margin-top:4px; font-weight:800; color:var(--text-muted);">
+                Amount Collected: <b style="color:var(--primary);">₹${o.totalAmount}</b> (${o.paymentMethod})
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        container.innerHTML = '<p style="color:red; text-align:center;">Failed to load history.</p>';
+      }
+    }
+
+    async function updateRiderStatus(orderId, status) {
+      if (!confirm(`Mark Order #${orderId} as '${status}'?`)) return;
+
+      try {
+        const res = await fetch(`${API_URL}/rider/update-status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-rider-token': riderToken
+          },
+          body: JSON.stringify({ orderId, status })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ ' + data.message);
+          fetchOrders();
+        } else alert(data.message);
+      } catch (e) { alert('Status update failed'); }
+    }
+  </script>
+</body>
+</html>
