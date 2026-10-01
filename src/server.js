@@ -253,34 +253,35 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. STATIC & PWA MANIFEST ROUTES
+// 3. STATIC & MULTI-PWA ROUTES
 // ==========================================
 
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 app.get('/rider', (req, res) => res.sendFile(path.join(__dirname, 'rider.html')));
 
-// Service Worker
+// Service Worker (Allowed across whole root)
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
+  res.setHeader('Service-Worker-Allowed', '/');
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
 
-// 1. Customer PWA Manifest (Name: 2038)
+// 1. Customer PWA Manifest
 app.get('/manifest.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
-// 2. Rider PWA Manifest (Name: 2038 Rider)
+// 2. Rider PWA Manifest
 app.get('/manifest-rider.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest-rider.json'));
 });
 
-// 3. Admin PWA Manifest (Name: 2038 Admin)
+// 3. Admin PWA Manifest
 app.get('/manifest-admin.json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest-admin.json'));
 });
 
@@ -301,7 +302,7 @@ app.post('/api/admin/config/store-status', verifyAdminToken, async (req, res) =>
   try {
     const { status } = req.body;
     await Config.findOneAndUpdate({ key: 'store_status' }, { value: status }, { upsert: true });
-    res.json({ success: true, status, message: `Store is now ${status}!` });
+    res.json({ success: true, status, message: `Store status changed to ${status}.` });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Failed to update store status.' });
   }
@@ -381,7 +382,7 @@ app.post('/api/coupons/apply', async (req, res) => {
       code: coupon.code,
       discount,
       finalAmount,
-      message: `🎉 Coupon '${coupon.code}' applied! You saved ₹${discount}.`
+      message: `Coupon '${coupon.code}' applied! Saved ₹${discount}.`
     });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Failed to validate coupon.' });
@@ -529,7 +530,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
     }
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
     if (unavailable.length > 0) {
       const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
       return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });

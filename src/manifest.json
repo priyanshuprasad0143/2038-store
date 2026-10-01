@@ -1,8 +1,8 @@
 {
-  "id": "/customer-store-app",
+  "id": "app-2038-customer",
   "name": "2038",
   "short_name": "2038",
-  "start_url": "/",
+  "start_url": "/?source=pwa_customer",
   "scope": "/",
   "display": "standalone",
   "background_color": "#060913",
