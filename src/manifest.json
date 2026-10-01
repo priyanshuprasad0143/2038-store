@@ -1,7 +1,9 @@
 {
+  "id": "/customer-store-app",
   "name": "2038",
   "short_name": "2038",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#060913",
   "theme_color": "#00c853",
@@ -9,12 +11,6 @@
     {
       "src": "/icon-customer.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-customer.png",
-      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     }
