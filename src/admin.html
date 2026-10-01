@@ -7,8 +7,11 @@
   
   <link rel="manifest" href="/manifest-admin.json" />
   <meta name="theme-color" content="#10b981" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="2038 Admin" />
+  <link rel="apple-touch-icon" href="/icon-admin.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -116,6 +119,20 @@
       background: rgba(239, 68, 68, 0.15);
       color: #ef4444;
       border-color: #ef4444;
+    }
+
+    .btn-install-portal {
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1.5px solid var(--brand-green);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     #soundAlarmBanner {
@@ -263,6 +280,10 @@
         <button class="btn-store-status status-open" id="storeStatusToggleBtn" onclick="toggleStoreStatus()">
           <span id="storeStatusIcon">🟢</span>
           <span id="storeStatusText">Store Online</span>
+        </button>
+
+        <button class="btn-install-portal" id="btnInstallAdminApp" onclick="installAdminAppDirect()">
+          <span>📲</span> <span>Install Admin</span>
         </button>
 
         <button class="btn-action" title="Test Alert Ringtone" onclick="testAudioAlert()">
@@ -429,6 +450,22 @@
     let alarmAudioInterval = null;
     let currentOrdersCache = [];
     let audioContext = null;
+    let adminInstallPrompt = null;
+
+    // Capture install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      adminInstallPrompt = e;
+    });
+
+    function installAdminAppDirect() {
+      if (adminInstallPrompt) {
+        adminInstallPrompt.prompt();
+        adminInstallPrompt.userChoice.then(() => { adminInstallPrompt = null; });
+      } else {
+        alert('To install 2038 Admin App as separate icon:\n\n1. Tap the top-right Chrome menu (⋮)\n2. Select "Add to Home screen" or "Install app"\n3. Name it "2038 Admin" and confirm.');
+      }
+    }
 
     let adminTheme = localStorage.getItem('2038_admin_theme') || 'dark';
     applyAdminTheme(adminTheme);
@@ -1171,7 +1208,6 @@
       } else { alert(data.message); }
     }
 
-    // Pure Native Service Worker Hook (No Custom Popups)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');

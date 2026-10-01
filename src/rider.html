@@ -7,8 +7,11 @@
   
   <link rel="manifest" href="/manifest-rider.json" />
   <meta name="theme-color" content="#0284c7" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="2038 Rider" />
+  <link rel="apple-touch-icon" href="/icon-rider.png" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -101,6 +104,20 @@
       border-radius: 8px;
       font-size: 12px;
       font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-install-portal {
+      background: rgba(2, 132, 199, 0.18);
+      color: #38bdf8;
+      border: 1.5px solid #0284c7;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 900;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -295,12 +312,16 @@
       <div class="rider-brand">20<span>38</span> Rider</div>
       
       <div class="header-actions">
+        <button class="btn-install-portal" id="btnInstallRiderApp" onclick="installRiderAppDirect()">
+          <span>📲</span> <span>Install Rider</span>
+        </button>
+
         <button class="btn-sos" onclick="openSosModal()">
           <span>🆘 SOS Help</span>
         </button>
 
         <button class="btn-icon" id="themeToggleBtn" onclick="toggleRiderTheme()">
-          <span id="themeIcon">☀️</span>
+          <span id="themeIcon">☀️️</span>
         </button>
 
         <button class="btn-icon" onclick="fetchOrders()">🔄</button>
@@ -359,6 +380,22 @@
     let riderToken = localStorage.getItem('2038_rider_token') || null;
     let currentRiderTab = 'active';
     let storeHelpPhone = '9123456789';
+    let riderInstallPrompt = null;
+
+    // Capture install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      riderInstallPrompt = e;
+    });
+
+    function installRiderAppDirect() {
+      if (riderInstallPrompt) {
+        riderInstallPrompt.prompt();
+        riderInstallPrompt.userChoice.then(() => { riderInstallPrompt = null; });
+      } else {
+        alert('To install 2038 Rider App as separate icon:\n\n1. Tap the top-right Chrome menu (⋮)\n2. Select "Add to Home screen" or "Install app"\n3. Name it "2038 Rider" and confirm.');
+      }
+    }
 
     let riderTheme = localStorage.getItem('2038_rider_theme') || 'dark';
     applyRiderTheme(riderTheme);
@@ -375,7 +412,7 @@
       if (theme === 'light') {
         icon.textContent = '🌙';
       } else {
-        icon.textContent = '☀️️';
+        icon.textContent = '☀️';
       }
     }
 
@@ -622,7 +659,6 @@
       } catch (e) { alert('Status update process failed.'); }
     }
 
-    // Pure Native Service Worker Hook (No Custom Popups)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');

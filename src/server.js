@@ -253,45 +253,36 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. MULTI-PWA ROUTING & SCOPE ISOLATION
+// 3. STATIC & MULTI-PWA ROUTES
 // ==========================================
 
-// 1. Customer Store (Scoped to /app/)
-app.get(['/', '/app', '/app/'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+// Global Service Worker
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Service-Worker-Allowed', '/app/');
   res.sendFile(path.join(__dirname, 'sw.js'));
+});
+
+// 1. Customer Store
+app.get(['/', '/store'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest.json'));
 });
 
-// 2. Rider Portal (Scoped to /rider/)
+// 2. Rider Portal
 app.get(['/rider', '/rider/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'rider.html'));
-});
-app.get('/sw-rider.js', (req, res) => {
-  res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Service-Worker-Allowed', '/rider/');
-  res.sendFile(path.join(__dirname, 'sw-rider.js'));
 });
 app.get('/manifest-rider.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
   res.sendFile(path.join(__dirname, 'manifest-rider.json'));
 });
 
-// 3. Admin Portal (Scoped to /admin/)
+// 3. Admin Portal
 app.get(['/admin', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
-});
-app.get('/sw-admin.js', (req, res) => {
-  res.setHeader('Content-Type', 'application/javascript');
-  res.setHeader('Service-Worker-Allowed', '/admin/');
-  res.sendFile(path.join(__dirname, 'sw-admin.js'));
 });
 app.get('/manifest-admin.json', (req, res) => {
   res.setHeader('Content-Type', 'application/manifest+json');
@@ -543,7 +534,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
     }
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
     if (unavailable.length > 0) {
       const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
       return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });
