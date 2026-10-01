@@ -1,9 +1,9 @@
 {
-  "id": "two038-rider-portal-v1",
+  "id": "two038-rider-portal-app",
   "name": "2038 Rider",
   "short_name": "2038 Rider",
-  "start_url": "/rider/",
-  "scope": "/rider/",
+  "start_url": "/rider?pwa=rider",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#090d16",
   "theme_color": "#0284c7",

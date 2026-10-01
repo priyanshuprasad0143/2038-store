@@ -1,9 +1,9 @@
 {
-  "id": "two038-admin-control-v1",
+  "id": "two038-admin-control-app",
   "name": "2038 Admin",
   "short_name": "2038 Admin",
-  "start_url": "/admin/",
-  "scope": "/admin/",
+  "start_url": "/admin?pwa=admin",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#090d16",
   "theme_color": "#10b981",

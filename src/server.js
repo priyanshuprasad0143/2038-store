@@ -253,7 +253,7 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. STATIC & MULTI-PWA ROUTES
+// 3. MULTI-PWA ROUTING & SCOPES
 // ==========================================
 
 // Global Service Worker
@@ -262,8 +262,8 @@ app.get('/sw.js', (req, res) => {
   res.sendFile(path.join(__dirname, 'sw.js'));
 });
 
-// 1. Customer Store
-app.get(['/', '/store'], (req, res) => {
+// 1. Customer Store (Covers /, /app, /app/)
+app.get(['/', '/app', '/app/', '/store'], (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 app.get('/manifest.json', (req, res) => {
@@ -534,7 +534,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
     }
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
     if (unavailable.length > 0) {
       const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
       return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });
