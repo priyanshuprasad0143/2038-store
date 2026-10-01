@@ -1,8 +1,8 @@
 {
-  "id": "app-2038-admin",
+  "id": "two038-admin-pwa-app",
   "name": "2038 Admin",
   "short_name": "2038 Admin",
-  "start_url": "/admin?source=pwa_admin",
+  "start_url": "/admin",
   "scope": "/admin",
   "display": "standalone",
   "background_color": "#090d16",

@@ -1,8 +1,8 @@
 {
-  "id": "app-2038-rider",
+  "id": "two038-rider-pwa-app",
   "name": "2038 Rider",
   "short_name": "2038 Rider",
-  "start_url": "/rider?source=pwa_rider",
+  "start_url": "/rider",
   "scope": "/rider",
   "display": "standalone",
   "background_color": "#090d16",

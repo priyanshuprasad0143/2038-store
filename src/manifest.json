@@ -1,8 +1,8 @@
 {
-  "id": "app-2038-customer",
+  "id": "two038-customer-pwa-app",
   "name": "2038",
   "short_name": "2038",
-  "start_url": "/?source=pwa_customer",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#060913",
