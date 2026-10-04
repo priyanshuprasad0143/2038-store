@@ -84,11 +84,13 @@ const User = mongoose.model('User', userSchema);
 const gridBoxSchema = new mongoose.Schema({
   boxNumber: { type: Number, required: true, unique: true },
   price: { type: Number, default: 100 },
-  status: { type: String, default: 'available' },
+  status: { type: String, default: 'available' }, // available, pending, owned
   ownerPhone: { type: String, default: null },
   ownerName: { type: String, default: null },
   utrNumber: { type: String, default: null },
-  boughtAt: { type: Date, default: null }
+  boughtAt: { type: Date, default: null },
+  batchStatus: { type: String, default: 'POOLED' }, // POOLED, IN_PRODUCTION, SETTLED
+  batchProfitShare: { type: Number, default: 0 }
 });
 const GridBox = mongoose.model('GridBox', gridBoxSchema);
 
@@ -104,14 +106,13 @@ const gridRequestSchema = new mongoose.Schema({
 });
 const GridRequest = mongoose.model('GridRequest', gridRequestSchema);
 
-// WITHDRAWAL REQUEST SCHEMA
 const withdrawalSchema = new mongoose.Schema({
   withdrawalId: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   customerName: { type: String, required: true },
   amount: { type: Number, required: true },
-  type: { type: String, default: 'PROFIT' },
-  payoutMethod: { type: String, default: 'BANK' }, // BANK or UPI
+  withdrawalType: { type: String, default: 'CAPITAL' }, // CAPITAL, PROFIT, FULL
+  payoutMethod: { type: String, default: 'BANK' }, // BANK, UPI
   accountHolder: { type: String, default: '' },
   bankName: { type: String, default: '' },
   accountNumber: { type: String, default: '' },
@@ -206,20 +207,9 @@ async function initializeDefaults() {
       await Config.create({ key: 'support_phone', value: '9123456789' });
     }
 
-    const dailyRateExists = await Config.findOne({ key: 'daily_rate' });
-    if (!dailyRateExists) {
-      await Config.create({ key: 'daily_rate', value: '2' }); // 2% per day default
-    }
-
-    const welcomeCoupon = await Coupon.findOne({ code: 'WELCOME50' });
-    if (!welcomeCoupon) {
-      await Coupon.create({
-        code: 'WELCOME50',
-        type: 'FLAT',
-        value: 50,
-        minOrder: 149,
-        isActive: true
-      });
+    const batchStatusExists = await Config.findOne({ key: 'production_batch_status' });
+    if (!batchStatusExists) {
+      await Config.create({ key: 'production_batch_status', value: 'POOLED' });
     }
 
     const boxCount = await GridBox.countDocuments();
@@ -282,7 +272,6 @@ const verifyRiderToken = async (req, res, next) => {
 // 3. MULTI-PWA ROUTING & SCOPES
 // ==========================================
 
-// Global Service Worker
 app.get('/sw.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(path.join(__dirname, 'sw.js'));
@@ -319,34 +308,11 @@ app.get('/manifest-admin.json', (req, res) => {
 // 4. API ROUTES
 // ==========================================
 
-// Daily Rate APIs
-app.get('/api/config/daily-rate', async (req, res) => {
-  try {
-    const cfg = await Config.findOne({ key: 'daily_rate' });
-    res.json({ success: true, rate: cfg ? Number(cfg.value) : 2 });
-  } catch (e) {
-    res.json({ success: true, rate: 2 });
-  }
-});
-
-app.post('/api/admin/config/daily-rate', verifyAdminToken, async (req, res) => {
-  try {
-    const { rate } = req.body;
-    if (rate === undefined || rate <= 0) return res.status(400).json({ success: false, message: 'Valid rate required.' });
-    await Config.findOneAndUpdate({ key: 'daily_rate' }, { value: String(rate) }, { upsert: true });
-    res.json({ success: true, message: `Daily profit rate set to ${rate}% per day.` });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to update daily rate.' });
-  }
-});
-
 app.get('/api/config/store-status', async (req, res) => {
   try {
     const cfg = await Config.findOne({ key: 'store_status' });
     res.json({ success: true, status: cfg ? cfg.value : 'OPEN' });
-  } catch (e) {
-    res.json({ success: true, status: 'OPEN' });
-  }
+  } catch (e) { res.json({ success: true, status: 'OPEN' }); }
 });
 
 app.post('/api/admin/config/store-status', verifyAdminToken, async (req, res) => {
@@ -354,18 +320,14 @@ app.post('/api/admin/config/store-status', verifyAdminToken, async (req, res) =>
     const { status } = req.body;
     await Config.findOneAndUpdate({ key: 'store_status' }, { value: status }, { upsert: true });
     res.json({ success: true, status, message: `Store status changed to ${status}.` });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to update store status.' });
-  }
+  } catch (e) { res.status(500).json({ success: false, message: 'Failed to update store status.' }); }
 });
 
 app.get('/api/config/support-phone', async (req, res) => {
   try {
     const cfg = await Config.findOne({ key: 'support_phone' });
     res.json({ success: true, phone: cfg ? cfg.value : '9123456789' });
-  } catch (e) {
-    res.json({ success: true, phone: '9123456789' });
-  }
+  } catch (e) { res.json({ success: true, phone: '9123456789' }); }
 });
 
 app.post('/api/admin/config/support-phone', verifyAdminToken, async (req, res) => {
@@ -374,18 +336,14 @@ app.post('/api/admin/config/support-phone', verifyAdminToken, async (req, res) =
     if (!phone) return res.status(400).json({ success: false, message: 'Phone required.' });
     await Config.findOneAndUpdate({ key: 'support_phone' }, { value: String(phone).trim() }, { upsert: true });
     res.json({ success: true, message: 'Store helpline number updated.' });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to update helpline number.' });
-  }
+  } catch (e) { res.status(500).json({ success: false, message: 'Failed to update helpline number.' }); }
 });
 
 app.get('/api/config/upi', async (req, res) => {
   try {
     const cfg = await Config.findOne({ key: 'upi_id' });
     res.json({ success: true, upiId: cfg ? cfg.value : '2038@upi' });
-  } catch (e) {
-    res.json({ success: true, upiId: '2038@upi' });
-  }
+  } catch (e) { res.json({ success: true, upiId: '2038@upi' }); }
 });
 
 app.post('/api/admin/config/upi', verifyAdminToken, async (req, res) => {
@@ -394,9 +352,7 @@ app.post('/api/admin/config/upi', verifyAdminToken, async (req, res) => {
     if (!upiId) return res.status(400).json({ success: false, message: 'Valid UPI identifier required.' });
     await Config.findOneAndUpdate({ key: 'upi_id' }, { value: upiId.trim() }, { upsert: true });
     res.json({ success: true, message: 'Store UPI configuration updated successfully.' });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to update store UPI configuration.' });
-  }
+  } catch (e) { res.status(500).json({ success: false, message: 'Failed to update store UPI configuration.' }); }
 });
 
 // Coupons
@@ -407,83 +363,39 @@ app.post('/api/coupons/apply', async (req, res) => {
     const total = Number(cartTotal) || 0;
 
     const coupon = await Coupon.findOne({ code: cleanCode, isActive: true });
-    if (!coupon) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired promo code.' });
-    }
+    if (!coupon) return res.status(400).json({ success: false, message: 'Invalid promo code.' });
+    if (total < coupon.minOrder) return res.status(400).json({ success: false, message: `Minimum order of ₹${coupon.minOrder} required.` });
 
-    if (total < coupon.minOrder) {
-      return res.status(400).json({
-        success: false,
-        message: `Code requires a minimum order of ₹${coupon.minOrder}. Add more items!`
-      });
-    }
-
-    let discount = 0;
-    if (coupon.type === 'PERCENT') {
-      discount = Math.round((total * coupon.value) / 100);
-    } else {
-      discount = coupon.value;
-    }
-
+    let discount = coupon.type === 'PERCENT' ? Math.round((total * coupon.value) / 100) : coupon.value;
     discount = Math.min(discount, total);
-    const finalAmount = Math.max(0, total - discount);
-
-    res.json({
-      success: true,
-      code: coupon.code,
-      discount,
-      finalAmount,
-      message: `Coupon '${coupon.code}' applied! Saved ₹${discount}.`
-    });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to validate coupon.' });
-  }
+    res.json({ success: true, code: coupon.code, discount, finalAmount: Math.max(0, total - discount) });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/coupons', verifyAdminToken, async (req, res) => {
   try {
     const coupons = await Coupon.find({}).sort({ createdAt: -1 });
     res.json({ success: true, coupons });
-  } catch (e) {
-    res.status(500).json({ success: false });
-  }
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/coupons/create', verifyAdminToken, async (req, res) => {
   try {
     const { code, type, value, minOrder } = req.body;
     const cleanCode = String(code || '').trim().toUpperCase();
-
-    if (!cleanCode || !value) {
-      return res.status(400).json({ success: false, message: 'Code and discount value are required.' });
-    }
-
     const exists = await Coupon.findOne({ code: cleanCode });
-    if (exists) {
-      return res.status(400).json({ success: false, message: 'A coupon with this code already exists.' });
-    }
+    if (exists) return res.status(400).json({ success: false, message: 'Coupon already exists.' });
 
-    const newCoupon = await Coupon.create({
-      code: cleanCode,
-      type: type || 'FLAT',
-      value: Number(value),
-      minOrder: Number(minOrder) || 0,
-      isActive: true
-    });
-
-    res.status(201).json({ success: true, message: 'Coupon created successfully!', coupon: newCoupon });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to create coupon.' });
-  }
+    const newCoupon = await Coupon.create({ code: cleanCode, type: type || 'FLAT', value: Number(value), minOrder: Number(minOrder) || 0 });
+    res.status(201).json({ success: true, coupon: newCoupon });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.delete('/api/coupons/:code', verifyAdminToken, async (req, res) => {
   try {
     await Coupon.findOneAndDelete({ code: req.params.code.toUpperCase() });
-    res.json({ success: true, message: 'Coupon removed successfully.' });
-  } catch (e) {
-    res.status(500).json({ success: false });
-  }
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 // Admin Auth
@@ -491,75 +403,192 @@ app.post('/api/admin/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     const admin = await Admin.findOne({ username: String(username).trim() });
-
     if (!admin || admin.passwordHash !== hashSecret(password)) {
-      return res.status(400).json({ success: false, message: 'Invalid admin username or password.' });
+      return res.status(400).json({ success: false, message: 'Invalid admin credentials.' });
     }
-
-    const token = `${admin.username}:::${admin.passwordHash}`;
-    res.json({ success: true, token, username: admin.username });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Authentication process failed.' });
-  }
+    res.json({ success: true, token: `${admin.username}:::${admin.passwordHash}`, username: admin.username });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/admin/change-credentials', verifyAdminToken, async (req, res) => {
   try {
     const { newUsername, newPassword } = req.body;
-    if (!newUsername || !newPassword) {
-      return res.status(400).json({ success: false, message: 'New credentials required.' });
-    }
-
     req.admin.username = String(newUsername).trim();
     req.admin.passwordHash = hashSecret(newPassword);
     await req.admin.save();
-
-    const newToken = `${req.admin.username}:::${req.admin.passwordHash}`;
-    res.json({ success: true, message: 'Administrative credentials updated successfully.', newToken });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to update credentials.' });
-  }
+    res.json({ success: true, message: 'Credentials updated.', newToken: `${req.admin.username}:::${req.admin.passwordHash}` });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 // Rider Auth
 app.post('/api/rider/login', async (req, res) => {
   try {
     const { riderId, password } = req.body;
-    const cleanId = String(riderId || '').trim();
-    const rider = await Rider.findOne({ riderId: cleanId });
-
+    const rider = await Rider.findOne({ riderId: String(riderId || '').trim() });
     if (!rider || rider.passwordHash !== hashSecret(password)) {
-      return res.status(400).json({ success: false, message: 'Invalid Rider ID or Password.' });
+      return res.status(400).json({ success: false, message: 'Invalid Rider credentials.' });
     }
-
-    const token = `${rider.riderId}:::${rider.passwordHash}`;
-    res.json({ success: true, token, rider: { riderId: rider.riderId, name: rider.name } });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Login failed.' });
-  }
+    res.json({ success: true, token: `${rider.riderId}:::${rider.passwordHash}`, rider: { riderId: rider.riderId, name: rider.name } });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// Grid Stock APIs
-app.get('/api/grid/boxes', async (req, res) => {
-  try {
-    const boxes = await GridBox.find({}).sort({ boxNumber: 1 });
-    res.json({ success: true, total: boxes.length, boxes });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Database query error.' });
-  }
-});
+// ==========================================
+// 5. CROWD MANUFACTURING, 50-50 PROFIT & WITHDRAWAL ENGINE
+// ==========================================
 
+// Customer Portfolio API (Exact mapping for Total Value, Withdrawable, and 1-Week Holding)
 app.get('/api/grid/my-portfolio', async (req, res) => {
   try {
     const phone = String(req.query.phone || '').trim();
     const boxes = await GridBox.find({ ownerPhone: phone, status: 'owned' }).sort({ boxNumber: 1 });
-    const cfg = await Config.findOne({ key: 'daily_rate' });
-    const dailyRate = cfg ? Number(cfg.value) : 2;
 
-    res.json({ success: true, boxes, dailyRate });
+    const totalInvested = boxes.length * 100;
+    const batchCfg = await Config.findOne({ key: 'production_batch_status' });
+    const currentBatchStatus = batchCfg ? batchCfg.value : 'POOLED';
+
+    let totalCustomerProfit = 0;
+    let earliestPurchase = null;
+
+    boxes.forEach(b => {
+      totalCustomerProfit += (b.batchProfitShare || 0);
+      if (b.boughtAt) {
+        const d = new Date(b.boughtAt);
+        if (!earliestPurchase || d < earliestPurchase) {
+          earliestPurchase = d;
+        }
+      }
+    });
+
+    // Check past approved withdrawals
+    const pastWithdrawals = await WithdrawalRequest.find({ phone, status: 'Approved' });
+    let alreadyWithdrawn = 0;
+    pastWithdrawals.forEach(w => {
+      alreadyWithdrawn += (w.amount || 0);
+    });
+
+    // 1-Week (7-Day) Holding Period Calculation
+    let daysHeld = 0;
+    let isWeekCompleted = false;
+    if (earliestPurchase) {
+      const diffMs = Date.now() - earliestPurchase.getTime();
+      daysHeld = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (daysHeld >= 7) {
+        isWeekCompleted = true;
+      }
+    }
+
+    let isWithdrawable = false;
+    let availableProfitBalance = 0;
+    let statusMessage = '';
+
+    if (currentBatchStatus === 'POOLED') {
+      // Stage 1: Manufacturing shuru nahi hui - Customer ka Capital 100% withdrawable hai
+      isWithdrawable = totalInvested > alreadyWithdrawn;
+      availableProfitBalance = Math.max(0, totalInvested - alreadyWithdrawn);
+      statusMessage = 'Capital Pooled: Product manufacturing not started yet. 100% Refundable anytime.';
+    } else if (currentBatchStatus === 'IN_PRODUCTION') {
+      // Stage 2: Product manufacturing active - funds locked
+      isWithdrawable = false;
+      availableProfitBalance = 0;
+      statusMessage = 'In Production / Manufacturing Active: Funds actively deployed for product batch. Payout unlocks post-sales.';
+    } else if (currentBatchStatus === 'SETTLED') {
+      // Stage 3: Product sold - 50-50 profit split + 7-day holding rule
+      const fullPortfolioNet = (totalInvested + totalCustomerProfit) - alreadyWithdrawn;
+      if (isWeekCompleted) {
+        isWithdrawable = fullPortfolioNet > 0;
+        availableProfitBalance = Math.max(0, fullPortfolioNet);
+        statusMessage = `Batch Settled: 1-Week holding satisfied (${daysHeld} days). Full Capital + 50% Profit Share available!`;
+      } else {
+        isWithdrawable = false;
+        availableProfitBalance = 0;
+        statusMessage = `7-Day Profit Lock: ${daysHeld}/7 days completed. Payout unlocks in ${7 - daysHeld} days.`;
+      }
+    }
+
+    const totalPortfolioValue = Math.max(0, (totalInvested + totalCustomerProfit) - alreadyWithdrawn);
+
+    res.json({
+      success: true,
+      boxes,
+      totalBlocks: boxes.length,
+      totalInvested: totalInvested,
+      totalDailyYield: '50% Split',
+      totalCurrentEarnings: totalCustomerProfit,
+      totalPortfolioValue: totalPortfolioValue,
+      availableProfitBalance: availableProfitBalance,
+      isWithdrawable,
+      isWeekCompleted,
+      daysHeld,
+      batchStatus: currentBatchStatus,
+      statusMessage
+    });
   } catch (e) {
-    res.status(500).json({ success: false });
+    res.status(500).json({
+      success: false,
+      boxes: [],
+      totalBlocks: 0,
+      totalInvested: 0,
+      totalDailyYield: '0',
+      totalCurrentEarnings: 0,
+      totalPortfolioValue: 0,
+      availableProfitBalance: 0
+    });
   }
+});
+
+// Admin Controls Batch Cycle (Start Production, Settle 50-50 Profit, Reset)
+app.post('/api/admin/grid/update-batch-stage', verifyAdminToken, async (req, res) => {
+  try {
+    const { action, totalBatchProfit } = req.body;
+
+    if (action === 'START_PRODUCTION') {
+      await Config.findOneAndUpdate({ key: 'production_batch_status' }, { value: 'IN_PRODUCTION' }, { upsert: true });
+      await GridBox.updateMany({ status: 'owned' }, { $set: { batchStatus: 'IN_PRODUCTION' } });
+      return res.json({ success: true, message: 'Manufacturing batch started! Investor funds locked in production.' });
+    }
+
+    if (action === 'SETTLE_PROFIT') {
+      const profitNum = Number(totalBatchProfit) || 0;
+      const ownedBoxes = await GridBox.find({ status: 'owned' });
+      if (ownedBoxes.length === 0) return res.status(400).json({ success: false, message: 'No active stock holders to share profit.' });
+
+      // 50% Company, 50% Customer Split
+      const customerPoolShare = profitNum / 2;
+      const profitPerBox = Math.round((customerPoolShare / ownedBoxes.length) * 100) / 100;
+
+      await GridBox.updateMany({ status: 'owned' }, { 
+        $set: { 
+          batchStatus: 'SETTLED',
+          batchProfitShare: profitPerBox
+        } 
+      });
+
+      await Config.findOneAndUpdate({ key: 'production_batch_status' }, { value: 'SETTLED' }, { upsert: true });
+
+      return res.json({
+        success: true,
+        message: `Batch settled! Total Profit: ₹${profitNum}. Investor 50% share (₹${profitPerBox}/box) credited.`
+      });
+    }
+
+    if (action === 'RESET_TO_POOL') {
+      await Config.findOneAndUpdate({ key: 'production_batch_status' }, { value: 'POOLED' }, { upsert: true });
+      await GridBox.updateMany({ status: 'owned' }, { $set: { batchStatus: 'POOLED', batchProfitShare: 0 } });
+      return res.json({ success: true, message: 'Batch reset to Capital Pooled stage.' });
+    }
+
+    res.status(400).json({ success: false, message: 'Invalid action command.' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to update batch cycle.' });
+  }
+});
+
+app.get('/api/grid/boxes', async (req, res) => {
+  try {
+    const boxes = await GridBox.find({}).sort({ boxNumber: 1 });
+    const batchCfg = await Config.findOne({ key: 'production_batch_status' });
+    res.json({ success: true, total: boxes.length, boxes, currentBatchStatus: batchCfg ? batchCfg.value : 'POOLED' });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/grid/request-buy', async (req, res) => {
@@ -567,71 +596,41 @@ app.post('/api/grid/request-buy', async (req, res) => {
     const { phone, boxNumbers, utrNumber } = req.body;
     const cleanUtr = String(utrNumber || '').trim();
 
-    const utrRegex = /^[0-9]{12}$/;
-    if (!utrRegex.test(cleanUtr)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid UTR Number. Please input the exact 12-digit numeric reference.'
-      });
-    }
-
-    if (!phone || !boxNumbers || !boxNumbers.length) {
-      return res.status(400).json({ success: false, message: 'Phone number and block selection are mandatory.' });
+    if (!/^[0-9]{12}$/.test(cleanUtr)) {
+      return res.status(400).json({ success: false, message: 'Exact 12-digit numeric UTR required.' });
     }
 
     const user = await User.findOne({ phone: String(phone).trim() });
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
-    }
+    if (!user) return res.status(404).json({ success: false, message: 'Customer account not found.' });
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
-    if (unavailable.length > 0) {
-      const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
-      return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });
-    }
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
+    if (unavailable.length > 0) return res.status(400).json({ success: false, message: 'Selected block is unavailable.' });
 
     await GridBox.updateMany(
       { boxNumber: { $in: boxNumbers } },
-      {
-        $set: {
-          status: 'pending',
-          ownerPhone: user.phone,
-          ownerName: user.name,
-          utrNumber: cleanUtr
-        }
-      }
+      { $set: { status: 'pending', ownerPhone: user.phone, ownerName: user.name, utrNumber: cleanUtr } }
     );
 
-    const totalAmount = boxNumbers.length * 100;
     const requestId = `REQ-${Date.now().toString().slice(-6)}`;
-
     const newRequest = await GridRequest.create({
       requestId,
       phone: user.phone,
       customerName: user.name,
       boxNumbers,
-      totalAmount,
+      totalAmount: boxNumbers.length * 100,
       utrNumber: cleanUtr,
       status: 'Pending'
     });
 
-    res.json({
-      success: true,
-      message: 'UTR verification request submitted. The administration will reconcile and confirm ownership.',
-      request: newRequest
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Request submission failed.' });
-  }
+    res.json({ success: true, message: 'UTR verification request submitted.', request: newRequest });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/grid/requests', verifyAdminToken, async (req, res) => {
   try {
     const requests = await GridRequest.find({}).sort({ createdAt: -1 });
     res.json({ success: true, requests });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/grid/requests/approve', verifyAdminToken, async (req, res) => {
@@ -642,24 +641,13 @@ app.post('/api/grid/requests/approve', verifyAdminToken, async (req, res) => {
 
     await GridBox.updateMany(
       { boxNumber: { $in: request.boxNumbers } },
-      {
-        $set: {
-          status: 'owned',
-          ownerPhone: request.phone,
-          ownerName: request.customerName,
-          utrNumber: request.utrNumber,
-          boughtAt: new Date()
-        }
-      }
+      { $set: { status: 'owned', ownerPhone: request.phone, ownerName: request.customerName, utrNumber: request.utrNumber, boughtAt: new Date() } }
     );
 
     request.status = 'Approved';
     await request.save();
-
-    res.json({ success: true, message: `Request #${requestId} approved successfully.` });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Approval failed.' });
-  }
+    res.json({ success: true, message: `Request #${requestId} approved.` });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/grid/requests/reject', verifyAdminToken, async (req, res) => {
@@ -670,70 +658,50 @@ app.post('/api/grid/requests/reject', verifyAdminToken, async (req, res) => {
 
     await GridBox.updateMany(
       { boxNumber: { $in: request.boxNumbers } },
-      {
-        $set: {
-          status: 'available',
-          ownerPhone: null,
-          ownerName: null,
-          utrNumber: null,
-          boughtAt: null
-        }
-      }
+      { $set: { status: 'available', ownerPhone: null, ownerName: null, utrNumber: null, boughtAt: null } }
     );
 
     request.status = 'Rejected';
     await request.save();
-
-    res.json({ success: true, message: `Request #${requestId} rejected. Blocks returned to inventory.` });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Rejection failed.' });
-  }
+    res.json({ success: true, message: `Request #${requestId} rejected.` });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/grid/revoke-box', verifyAdminToken, async (req, res) => {
   try {
     const { boxNumber } = req.body;
-    const box = await GridBox.findOne({ boxNumber: Number(boxNumber) });
-    if (!box) return res.status(404).json({ success: false, message: 'Block not found.' });
-
-    box.status = 'available';
-    box.ownerPhone = null;
-    box.ownerName = null;
-    box.utrNumber = null;
-    box.boughtAt = null;
-    await box.save();
-
-    res.json({ success: true, message: `Block #${boxNumber} ownership revoked successfully.` });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Revocation failed.' });
-  }
+    await GridBox.findOneAndUpdate(
+      { boxNumber: Number(boxNumber) },
+      { status: 'available', ownerPhone: null, ownerName: null, utrNumber: null, boughtAt: null, batchProfitShare: 0 }
+    );
+    res.json({ success: true, message: `Block #${boxNumber} revoked.` });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 // ==========================================
-// 5. WITHDRAWAL APIS (CUSTOMER & ADMIN)
+// 6. CUSTOMER WITHDRAWALS & ADMIN PAYOUTS
 // ==========================================
 
-// Customer requests withdrawal
 app.post('/api/grid/request-withdrawal', async (req, res) => {
   try {
-    const { phone, amount, type, payoutMethod, accountHolder, bankName, accountNumber, ifscCode, upiId } = req.body;
+    const { phone, amount, payoutMethod, accountHolder, bankName, accountNumber, ifscCode, upiId } = req.body;
     const numAmount = Number(amount);
 
     if (!phone || !numAmount || numAmount <= 0) {
-      return res.status(400).json({ success: false, message: 'Valid phone and withdrawal amount are required.' });
+      return res.status(400).json({ success: false, message: 'Valid withdrawal amount is required.' });
     }
 
     const user = await User.findOne({ phone: String(phone).trim() });
-    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
+    if (!user) return res.status(404).json({ success: false, message: 'Customer account not found.' });
 
-    if (payoutMethod === 'BANK') {
-      if (!accountHolder || !bankName || !accountNumber || !ifscCode) {
-        return res.status(400).json({ success: false, message: 'All bank details (Holder Name, Bank, Account No, IFSC) are required.' });
-      }
-    } else if (payoutMethod === 'UPI') {
-      if (!upiId) {
-        return res.status(400).json({ success: false, message: 'Valid UPI identifier is required.' });
-      }
+    const batchCfg = await Config.findOne({ key: 'production_batch_status' });
+    const currentBatchStatus = batchCfg ? batchCfg.value : 'POOLED';
+
+    if (currentBatchStatus === 'IN_PRODUCTION') {
+      return res.status(400).json({
+        success: false,
+        message: 'Withdrawal currently locked: Batch is currently under production. Payout opens after sales settlement.'
+      });
     }
 
     const withdrawalId = `WTH-${Date.now().toString().slice(-6)}`;
@@ -742,7 +710,6 @@ app.post('/api/grid/request-withdrawal', async (req, res) => {
       phone: user.phone,
       customerName: user.name,
       amount: numAmount,
-      type: type || 'PROFIT',
       payoutMethod: payoutMethod || 'BANK',
       accountHolder: accountHolder || '',
       bankName: bankName || '',
@@ -754,72 +721,59 @@ app.post('/api/grid/request-withdrawal', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: 'Withdrawal request submitted! Administration will review and transfer funds.',
+      message: 'Withdrawal request submitted! Admin will verify and transfer funds to your account.',
       withdrawal: newWithdrawal
     });
   } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to submit withdrawal request.' });
+    res.status(500).json({ success: false, message: 'Withdrawal request failed.' });
   }
 });
 
-// Admin fetches all withdrawals
 app.get('/api/admin/grid/withdrawals', verifyAdminToken, async (req, res) => {
   try {
     const withdrawals = await WithdrawalRequest.find({}).sort({ createdAt: -1 });
     res.json({ success: true, withdrawals });
   } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to fetch withdrawals.' });
+    res.status(500).json({ success: false, message: 'Failed to retrieve withdrawals.' });
   }
 });
 
-// Admin approves withdrawal
 app.post('/api/admin/grid/approve-withdrawal', verifyAdminToken, async (req, res) => {
   try {
     const { withdrawalId, transactionRef } = req.body;
-    if (!withdrawalId || !transactionRef) {
-      return res.status(400).json({ success: false, message: 'Withdrawal ID and Transaction Reference are mandatory.' });
-    }
-
     const item = await WithdrawalRequest.findOne({ withdrawalId });
-    if (!item) return res.status(404).json({ success: false, message: 'Withdrawal request not found.' });
+    if (!item) return res.status(404).json({ success: false, message: 'Withdrawal not found.' });
 
     item.status = 'Approved';
     item.transactionRef = String(transactionRef).trim();
     item.processedAt = new Date();
     await item.save();
 
-    res.json({ success: true, message: `Withdrawal #${withdrawalId} approved and marked as Paid.` });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to approve withdrawal.' });
-  }
+    res.json({ success: true, message: `Withdrawal #${withdrawalId} confirmed and marked Paid.` });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// Admin rejects withdrawal
 app.post('/api/admin/grid/reject-withdrawal', verifyAdminToken, async (req, res) => {
   try {
     const { withdrawalId, reason } = req.body;
     const item = await WithdrawalRequest.findOne({ withdrawalId });
-    if (!item) return res.status(404).json({ success: false, message: 'Withdrawal request not found.' });
+    if (!item) return res.status(404).json({ success: false, message: 'Withdrawal not found.' });
 
     item.status = 'Rejected';
-    item.reason = reason || 'Details verification failed';
+    item.reason = reason || 'Bank details mismatch';
     item.processedAt = new Date();
     await item.save();
 
     res.json({ success: true, message: `Withdrawal #${withdrawalId} rejected.` });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to reject withdrawal.' });
-  }
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
-// Customer Authentication
+// Customer Auth APIs
 app.post('/api/user/check-phone', async (req, res) => {
   try {
     const user = await User.findOne({ phone: String(req.body.phone).trim() });
     res.json({ success: true, exists: !!user, name: user ? user.name : null });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/user/login', async (req, res) => {
@@ -830,27 +784,13 @@ app.post('/api/user/login', async (req, res) => {
     const user = await User.findOne({ phone: cleanPhone });
 
     if (!user) return res.status(400).json({ success: false, message: 'Account not registered.' });
-
     const targetHash = hashSecret(cleanPin);
-    const isHashMatch = user.pinHash && user.pinHash === targetHash;
-    const isPlainMatch = user.pin && user.pin === cleanPin;
-
-    if (!isHashMatch && !isPlainMatch) {
-      return res.status(400).json({ success: false, message: 'Invalid mobile number or security PIN.' });
+    if ((user.pinHash && user.pinHash !== targetHash) && (user.pin && user.pin !== cleanPin)) {
+      return res.status(400).json({ success: false, message: 'Invalid mobile or PIN.' });
     }
 
-    if (!user.pinHash) {
-      user.pinHash = targetHash;
-      await user.save();
-    }
-
-    res.json({
-      success: true,
-      user: { userId: user.userId, name: user.name, phone: user.phone, defaultAddress: user.defaultAddress }
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Sign in process encountered an error.' });
-  }
+    res.json({ success: true, user: { userId: user.userId, name: user.name, phone: user.phone, defaultAddress: user.defaultAddress } });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/user/register', async (req, res) => {
@@ -861,248 +801,120 @@ app.post('/api/user/register', async (req, res) => {
     const cleanRecovery = String(recoveryWord || '').trim();
 
     if (!name || cleanPhone.length !== 10 || cleanPin.length !== 4 || !cleanRecovery) {
-      return res.status(400).json({ success: false, message: 'All registration parameters are mandatory.' });
+      return res.status(400).json({ success: false, message: 'All registration parameters mandatory.' });
     }
 
-    let user = await User.findOne({ phone: cleanPhone });
-    const pHash = hashSecret(cleanPin);
-    const rHash = hashSecret(cleanRecovery);
-
-    if (user) {
-      user.name = name.trim();
-      user.pinHash = pHash;
-      user.recoveryHash = rHash;
-      if (defaultAddress) user.defaultAddress = defaultAddress;
-      await user.save();
-    } else {
-      const userId = `2038-U${Date.now().toString().slice(-5)}`;
-      user = await User.create({
-        userId,
-        name: name.trim(),
-        phone: cleanPhone,
-        pinHash: pHash,
-        recoveryHash: rHash,
-        defaultAddress: defaultAddress || ''
-      });
-    }
-
-    res.status(201).json({
-      success: true,
-      user: { userId: user.userId, name: user.name, phone: user.phone, defaultAddress: user.defaultAddress }
+    const userId = `2038-U${Date.now().toString().slice(-5)}`;
+    const user = await User.create({
+      userId,
+      name: name.trim(),
+      phone: cleanPhone,
+      pinHash: hashSecret(cleanPin),
+      recoveryHash: hashSecret(cleanRecovery),
+      defaultAddress: defaultAddress || ''
     });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Customer registration failed.' });
-  }
+
+    res.status(201).json({ success: true, user: { userId: user.userId, name: user.name, phone: user.phone, defaultAddress: user.defaultAddress } });
+  } catch (err) { res.status(500).json({ success: false, message: 'Registration failed.' }); }
 });
 
 app.post('/api/user/reset-pin', async (req, res) => {
   try {
     const { phone, recoveryWord, newPin } = req.body;
-    const cleanPhone = String(phone).trim();
-    const cleanPin = String(newPin).trim();
-    const cleanRecovery = String(recoveryWord || '').trim();
-
-    if (!cleanPhone || cleanPin.length !== 4 || !cleanRecovery) {
-      return res.status(400).json({ success: false, message: 'Mobile number, new 4-digit PIN, and recovery key are required.' });
+    const user = await User.findOne({ phone: String(phone).trim() });
+    if (!user || (user.recoveryHash && user.recoveryHash !== hashSecret(recoveryWord))) {
+      return res.status(400).json({ success: false, message: 'Incorrect recovery word.' });
     }
-
-    const user = await User.findOne({ phone: cleanPhone });
-    if (!user) return res.status(404).json({ success: false, message: 'Account not found.' });
-
-    if (user.recoveryHash && user.recoveryHash !== hashSecret(cleanRecovery)) {
-      return res.status(400).json({ success: false, message: 'Incorrect recovery key provided.' });
-    }
-
-    user.pinHash = hashSecret(cleanPin);
-    user.recoveryHash = hashSecret(cleanRecovery);
+    user.pinHash = hashSecret(newPin);
     user.pin = undefined;
     await user.save();
-
-    res.json({ success: true, message: 'Security PIN reset successfully. Please sign in.' });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'PIN reset procedure failed.' });
-  }
+    res.json({ success: true, message: 'PIN reset successfully.' });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/user/update-address', async (req, res) => {
   try {
     const user = await User.findOneAndUpdate({ phone: String(req.body.phone).trim() }, { defaultAddress: req.body.address }, { new: true });
     res.json({ success: true, user });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// Pincodes
+// Pincodes & Products
 app.get('/api/pincodes/active', async (req, res) => {
   try {
     const pins = await Pincode.find({});
     res.json({ success: true, pincodes: pins.map(p => p.code) });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/check-pincode', async (req, res) => {
   try {
     const exists = await Pincode.findOne({ code: String(req.body.pincode).trim() });
-    res.json({
-      success: true,
-      serviceable: !!exists,
-      message: exists ? 'Instant 10-12 minute delivery available.' : 'Currently not serviceable.'
-    });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    res.json({ success: true, serviceable: !!exists });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/pincodes', verifyAdminToken, async (req, res) => {
   try {
     const pins = await Pincode.find({});
     res.json({ success: true, pincodes: pins.map(p => p.code) });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/pincodes/add', verifyAdminToken, async (req, res) => {
   try {
-    const cleanPin = String(req.body.pincode).trim();
-    if (!cleanPin || cleanPin.length !== 6) return res.status(400).json({ success: false, message: 'Valid 6-digit postal code required.' });
-
-    const exists = await Pincode.findOne({ code: cleanPin });
-    if (exists) return res.status(400).json({ success: false, message: 'Postal code already configured.' });
-
-    await Pincode.create({ code: cleanPin });
-    res.json({ success: true, message: `Postal area ${cleanPin} activated.` });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    await Pincode.create({ code: String(req.body.pincode).trim() });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.delete('/api/pincodes/:code', verifyAdminToken, async (req, res) => {
   try {
-    const code = String(req.params.code).trim();
-    await Pincode.deleteOne({ code });
-    res.json({ success: true, message: `Postal area ${code} deleted.` });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    await Pincode.deleteOne({ code: String(req.params.code).trim() });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// Products
 app.get('/api/products', async (req, res) => {
   try {
     const prods = await Product.find({});
-    res.json({
-      success: true,
-      products: prods.map(p => ({
-        id: p._id.toString(),
-        name: p.name,
-        category: p.category,
-        price: p.price,
-        stock: p.stock,
-        unit: p.unit,
-        badge: p.badge,
-        image: p.image
-      }))
-    });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    res.json({ success: true, products: prods.map(p => ({ id: p._id.toString(), name: p.name, category: p.category, price: p.price, stock: p.stock, unit: p.unit, badge: p.badge, image: p.image })) });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/products/add', verifyAdminToken, async (req, res) => {
   try {
-    const { name, category, price, stock, unit, badge, image } = req.body;
-    if (!name || !price || !stock || !unit) {
-      return res.status(400).json({ success: false, message: 'All product specifications are required.' });
-    }
-
-    const newProd = await Product.create({
-      name,
-      category: category || 'Snacks',
-      price: Number(price),
-      stock: Number(stock),
-      unit,
-      badge: badge || 'FRESH',
-      image: image || ''
-    });
-
-    res.status(201).json({ success: true, message: 'Product added to catalog.', product: newProd });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to create product.' });
-  }
+    const newProd = await Product.create(req.body);
+    res.status(201).json({ success: true, product: newProd });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.delete('/api/products/:id', verifyAdminToken, async (req, res) => {
   try {
     await Product.findByIdAndDelete(req.params.id);
-    res.json({ success: true, message: 'Product deleted from catalog.' });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
-// Order Processing
+// Orders Processing
 app.post('/api/orders/place', async (req, res) => {
   try {
-    const storeStatusCfg = await Config.findOne({ key: 'store_status' });
-    if (storeStatusCfg && storeStatusCfg.value === 'CLOSED') {
-      return res.status(400).json({
-        success: false,
-        message: 'The store is currently closed and not accepting new orders.'
-      });
-    }
-
     const { customerName, phone, address, pincode, items, paymentMethod, utrNumber, userId, couponCode, discountAmount, latitude, longitude } = req.body;
-    const cleanPin = String(pincode).trim();
-
-    const isServiceable = await Pincode.findOne({ code: cleanPin });
-    if (!isServiceable) {
-      return res.status(400).json({
-        success: false,
-        message: `Area ${cleanPin} is currently outside our delivery boundary.`
-      });
-    }
-
-    const method = paymentMethod || 'COD';
-    let cleanUtr = String(utrNumber || '').trim();
-
-    let initialOrderStatus = 'Placed';
-    let initialPayStatus = 'Pending';
-
-    if (method === 'UPI_QR') {
-      const utrRegex = /^[0-9]{12}$/;
-      if (!utrRegex.test(cleanUtr)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Valid 12-digit numeric UTR/Reference number is mandatory for UPI payments.'
-        });
-      }
-      initialOrderStatus = 'Payment Review';
-      initialPayStatus = 'Pending';
-    } else {
-      cleanUtr = '';
-      initialOrderStatus = 'Placed';
-      initialPayStatus = 'Pending (COD)';
-    }
+    let initialOrderStatus = paymentMethod === 'UPI_QR' ? 'Payment Review' : 'Placed';
+    let initialPayStatus = paymentMethod === 'UPI_QR' ? 'Pending' : 'Pending (COD)';
 
     let itemsTotal = 0;
     const enriched = [];
-
     for (const item of items) {
       const p = await Product.findById(item.productId);
-      if (!p || p.stock < (item.quantity || 1)) return res.status(400).json({ success: false, message: 'Insufficient product inventory.' });
+      if (!p || p.stock < (item.quantity || 1)) return res.status(400).json({ success: false, message: 'Insufficient stock.' });
       p.stock -= (item.quantity || 1);
       await p.save();
       itemsTotal += p.price * (item.quantity || 1);
       enriched.push({ productId: p._id.toString(), productName: p.name, unit: p.unit, price: p.price, quantity: item.quantity || 1 });
     }
 
-    const discount = Math.min(Number(discountAmount) || 0, itemsTotal);
-    const finalBillTotal = Math.max(0, itemsTotal - discount);
-
+    const finalBillTotal = Math.max(0, itemsTotal - (Number(discountAmount) || 0));
     const orderId = `2038-${Date.now().toString().slice(-6)}`;
     const newOrder = await Order.create({
       orderId,
@@ -1110,144 +922,102 @@ app.post('/api/orders/place', async (req, res) => {
       customerName,
       phone: String(phone).trim(),
       address,
-      pincode: cleanPin,
+      pincode,
       latitude: latitude ? Number(latitude) : null,
       longitude: longitude ? Number(longitude) : null,
       items: enriched,
       totalAmount: finalBillTotal,
-      discountAmount: discount,
+      discountAmount: Number(discountAmount) || 0,
       couponApplied: couponCode || '',
-      paymentMethod: method,
+      paymentMethod,
       paymentStatus: initialPayStatus,
-      utrNumber: cleanUtr,
+      utrNumber: paymentMethod === 'UPI_QR' ? utrNumber : '',
       orderStatus: initialOrderStatus
     });
 
     res.status(201).json({ success: true, order: newOrder });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Order placement failed.' });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/orders/verify-payment', verifyAdminToken, async (req, res) => {
   try {
     const { orderId, action } = req.body;
     const order = await Order.findOne({ orderId });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
+    if (!order) return res.status(404).json({ success: false });
 
     if (action === 'approve') {
       order.paymentStatus = 'Verified';
       order.orderStatus = 'Placed';
-      await order.save();
-      return res.json({ success: true, message: `Payment for Order #${orderId} verified. Ready for packing.` });
     } else {
-      for (const item of order.items) {
-        await Product.findByIdAndUpdate(item.productId, { $inc: { stock: item.quantity } });
-      }
       order.paymentStatus = 'Failed';
       order.orderStatus = 'Cancelled';
-      await order.save();
-      return res.json({ success: true, message: `Order #${orderId} payment rejected and order cancelled.` });
     }
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Payment verification failed.' });
-  }
+    await order.save();
+    res.json({ success: true, message: `Payment ${action}d.` });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 // Rider APIs
 app.get('/api/rider/active-orders', verifyRiderToken, async (req, res) => {
   try {
-    const orders = await Order.find({
-      orderStatus: { $in: ['Packed', 'Out for Delivery'] }
-    }).sort({ createdAt: 1 });
+    const orders = await Order.find({ orderStatus: { $in: ['Packed', 'Out for Delivery'] } }).sort({ createdAt: 1 });
     res.json({ success: true, orders });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Error fetching rider deliveries.' });
-  }
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/rider/history-orders', verifyRiderToken, async (req, res) => {
   try {
-    const orders = await Order.find({
-      orderStatus: 'Delivered'
-    }).sort({ deliveredAt: -1, createdAt: -1 }).limit(50);
+    const orders = await Order.find({ orderStatus: 'Delivered' }).sort({ deliveredAt: -1 }).limit(50);
     res.json({ success: true, orders });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Error fetching delivery history.' });
-  }
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.post('/api/rider/update-status', verifyRiderToken, async (req, res) => {
   try {
     const { orderId, status } = req.body;
-    if (!['Out for Delivery', 'Delivered'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid delivery status.' });
-    }
-
-    const updateFields = { orderStatus: status };
-    if (status === 'Delivered') {
-      updateFields.deliveredAt = new Date();
-    }
-
-    const order = await Order.findOneAndUpdate({ orderId }, updateFields, { new: true });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
-
-    res.json({ success: true, order, message: `Order #${orderId} marked as ${status}!` });
-  } catch (e) {
-    res.status(500).json({ success: false, message: 'Failed to update order status.' });
-  }
+    const update = { orderStatus: status };
+    if (status === 'Delivered') update.deliveredAt = new Date();
+    const order = await Order.findOneAndUpdate({ orderId }, update, { new: true });
+    res.json({ success: true, order });
+  } catch (e) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/orders/track/:orderId', async (req, res) => {
   try {
     const order = await Order.findOne({ orderId: req.params.orderId });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
-    res.json({ success: true, order });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    res.json({ success: !!order, order });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/orders/my-orders', async (req, res) => {
   try {
     const orders = await Order.find({ phone: String(req.query.phone).trim() }).sort({ createdAt: -1 });
     res.json({ success: true, orders });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.get('/api/orders', verifyAdminToken, async (req, res) => {
   try {
     const orders = await Order.find({}).sort({ createdAt: -1 });
     res.json({ success: true, orders });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.patch('/api/orders/status', verifyAdminToken, async (req, res) => {
   try {
     const { orderId, status } = req.body;
-    const updateFields = { orderStatus: status };
-    if (status === 'Delivered') updateFields.deliveredAt = new Date();
-
-    const order = await Order.findOneAndUpdate({ orderId }, updateFields, { new: true });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
+    const update = { orderStatus: status };
+    if (status === 'Delivered') update.deliveredAt = new Date();
+    const order = await Order.findOneAndUpdate({ orderId }, update, { new: true });
     res.json({ success: true, order });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
 app.delete('/api/orders/:orderId', verifyAdminToken, async (req, res) => {
   try {
-    const order = await Order.findOneAndDelete({ orderId: req.params.orderId });
-    if (!order) return res.status(404).json({ success: false, message: 'Order not found.' });
-    res.json({ success: true, message: 'Order permanently deleted.' });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
+    await Order.findOneAndDelete({ orderId: req.params.orderId });
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ success: false }); }
 });
 
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 2038 Multi-PWA Engine running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 2038 Production Engine running on port ${PORT}`));

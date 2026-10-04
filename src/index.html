@@ -1121,7 +1121,7 @@
     </div>
   </div>
 
-  <!-- Profile Dashboard Modal with Live Earnings & Withdrawal -->
+  <!-- Profile Dashboard Modal with Live Earnings & Total Portfolio Value -->
   <div id="profileDashboardModal" class="drawer-overlay">
     <div class="drawer-content">
       <div class="drawer-header">
@@ -1140,11 +1140,11 @@
         </div>
       </div>
 
-      <!-- Live Profit & Stock Portfolio Stats -->
+      <!-- Live Profit & Stock Portfolio Stats with Total Portfolio Value -->
       <div id="userPortfolioBox" style="display:none; background:linear-gradient(135deg, #090d16, #111827); border:1.5px solid var(--accent-gold); border-radius:16px; padding:16px; margin-bottom:16px; text-align:center; color:#fff;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
           <span style="font-size:11px; font-weight:900; color:var(--accent-gold); letter-spacing:1px;">📈 2038 STOCK PORTFOLIO</span>
-          <span style="font-size:10px; background:rgba(0,200,83,0.15); color:var(--primary); padding:2px 8px; border-radius:12px; font-weight:800;">● Active Yield</span>
+          <span id="profBatchBadge" style="font-size:10px; background:rgba(0,200,83,0.15); color:var(--primary); padding:2px 8px; border-radius:12px; font-weight:800;">● Active Yield</span>
         </div>
 
         <div class="profit-stats-grid">
@@ -1153,22 +1153,30 @@
             <div class="profit-card-val" id="profTotalInvested">₹0</div>
           </div>
           <div class="profit-card">
-            <div class="profit-card-label">Daily Profit Rate</div>
-            <div class="profit-card-val" style="color:var(--primary);" id="profDailyRate">₹0/day</div>
+            <div class="profit-card-label">Profit Sharing</div>
+            <div class="profit-card-val" style="color:var(--primary);" id="profDailyRate">50% Split</div>
           </div>
           <div class="profit-card">
             <div class="profit-card-label">Total Earned</div>
             <div class="profit-card-val" style="color:var(--accent-gold);" id="profTotalEarned">₹0</div>
           </div>
           <div class="profit-card">
-            <div class="profit-card-label">Withdrawable</div>
+            <div class="profit-card-label">Portfolio Value</div>
+            <div class="profit-card-val" style="color:#a78bfa;" id="profTotalValue">₹0</div>
+          </div>
+          <div class="profit-card" style="grid-column: span 2;">
+            <div class="profit-card-label">Withdrawable Balance</div>
             <div class="profit-card-val" style="color:#38bdf8;" id="profAvailableProfit">₹0</div>
           </div>
         </div>
 
+        <div id="profCycleNotice" style="font-size:11px; color:#cbd5e1; margin-bottom:12px; background:rgba(255,255,255,0.06); padding:8px 10px; border-radius:8px; font-weight:600; text-align:left;">
+          Capital Pooled (100% Refundable Anytime)
+        </div>
+
         <div style="display:flex; gap:8px;">
-          <button onclick="openWithdrawalModal()" style="flex:1; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#000; border:none; padding:10px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer;">
-            💸 Withdraw Profit
+          <button id="btnTriggerWithdrawal" onclick="openWithdrawalModal()" style="flex:1; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#000; border:none; padding:10px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer;">
+            💸 Withdraw Funds
           </button>
           <button onclick="openCertificateModal()" style="flex:1; background:rgba(255,171,0,0.15); border:1px solid var(--accent-gold); color:var(--accent-gold); padding:10px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer;">
             📜 Certificate
@@ -1211,7 +1219,7 @@
       </div>
 
       <div style="font-size:11px; font-weight:900; color:var(--text-muted); margin-bottom:4px;">ENTER WITHDRAWAL AMOUNT (₹):</div>
-      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="Amount (e.g. 50)" />
+      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="Amount (e.g. 100)" />
 
       <div style="font-size:11px; font-weight:900; color:var(--text-muted); margin:10px 0 6px;">SELECT PAYOUT METHOD:</div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
@@ -1361,7 +1369,7 @@
       <div class="drawer-header" style="border-color:rgba(255,255,255,0.08);">
         <div>
           <h3 style="font-size:18px; font-weight:900; color:var(--accent-gold);">📈 2038 Grid Stock</h3>
-          <p style="font-size:11px; color:#94a3b8; font-weight:600;">Earn ₹2 Daily Profit per Block</p>
+          <p style="font-size:11px; color:#94a3b8; font-weight:600;">Crowd Manufacturing • 50-50 Profit Split</p>
         </div>
         <button class="btn-close" style="background:rgba(255,255,255,0.08); color:white;" onclick="closeModal('gridStockModal')">✕</button>
       </div>
@@ -1370,10 +1378,10 @@
       <div id="gridQuickStats" style="display:none; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,171,0,0.3);">
         <div style="display:flex; justify-content:space-between; font-size:11px;">
           <span>Holding: <b id="gHoldBlocks" style="color:var(--accent-gold);">0 Blocks</b></span>
-          <span>Daily Profit: <b id="gHoldYield" style="color:var(--primary);">+₹0/day</b></span>
+          <span>Profit Split: <b id="gHoldYield" style="color:var(--primary);">50% Pool</b></span>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-          <span style="font-size:11px;">Balance: <b id="gHoldAvail" style="color:#38bdf8;">₹0</b></span>
+          <span style="font-size:11px;">Withdrawable: <b id="gHoldAvail" style="color:#38bdf8;">₹0</b></span>
           <button onclick="closeModal('gridStockModal'); openWithdrawalModal();" style="background:var(--primary); color:#000; border:none; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:900; cursor:pointer;">
             💸 Withdraw
           </button>
@@ -2029,22 +2037,80 @@
         const box = document.getElementById('userPortfolioBox');
         if (userOwnedBoxesCache.length > 0) {
           box.style.display = 'block';
-          document.getElementById('profTotalInvested').textContent = `₹${data.totalInvested}`;
-          document.getElementById('profDailyRate').textContent = `+₹${data.totalDailyYield}/day`;
-          document.getElementById('profTotalEarned').textContent = `₹${data.totalCurrentEarnings}`;
-          document.getElementById('profAvailableProfit').textContent = `₹${data.availableProfitBalance}`;
+          
+          const invested = data.totalInvested !== undefined ? data.totalInvested : (userOwnedBoxesCache.length * 100);
+          const earned = data.totalCurrentEarnings !== undefined ? data.totalCurrentEarnings : 0;
+          const portfolioVal = data.totalPortfolioValue !== undefined ? data.totalPortfolioValue : (invested + earned);
+          const withdrawable = data.availableProfitBalance !== undefined ? data.availableProfitBalance : 0;
+          const rateText = data.totalDailyYield || '50% Split';
+
+          // Zero undefined binding
+          document.getElementById('profTotalInvested').textContent = `₹${invested}`;
+          document.getElementById('profDailyRate').textContent = rateText;
+          document.getElementById('profTotalEarned').textContent = `₹${earned}`;
+          if (document.getElementById('profTotalValue')) {
+            document.getElementById('profTotalValue').textContent = `₹${portfolioVal}`;
+          }
+          document.getElementById('profAvailableProfit').textContent = `₹${withdrawable}`;
+
+          // Status & 1-Week Lock Badge & Notice
+          const batchBadge = document.getElementById('profBatchBadge');
+          const notice = document.getElementById('profCycleNotice');
+          const withdrawBtn = document.getElementById('btnTriggerWithdrawal');
+
+          if (data.batchStatus === 'IN_PRODUCTION') {
+            batchBadge.textContent = '🔒 In Production';
+            batchBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+            batchBadge.style.color = '#ef4444';
+            notice.textContent = data.statusMessage || '🔒 Funds actively locked in product manufacturing. Payouts open post-sales.';
+            withdrawBtn.style.opacity = '0.5';
+          } else if (data.batchStatus === 'SETTLED') {
+            batchBadge.textContent = '💰 Batch Settled';
+            batchBadge.style.background = 'rgba(255, 171, 0, 0.2)';
+            batchBadge.style.color = 'var(--accent-gold)';
+            
+            if (data.isWeekCompleted) {
+              notice.textContent = data.statusMessage || `✅ 1-Week holding completed (${data.daysHeld || 7} days)! Capital + 50% Profit unlocked for payout.`;
+              withdrawBtn.style.opacity = '1';
+            } else {
+              notice.textContent = data.statusMessage || `⏳ 7-Day Profit Lock: ${data.daysHeld || 0}/7 days completed. Payout unlocks in ${7 - (data.daysHeld || 0)} days.`;
+              withdrawBtn.style.opacity = '0.6';
+            }
+          } else {
+            batchBadge.textContent = '● Capital Pooled';
+            batchBadge.style.background = 'rgba(0, 200, 83, 0.15)';
+            batchBadge.style.color = 'var(--primary)';
+            notice.textContent = data.statusMessage || 'Capital Pooled: Product manufacturing not started yet. 100% Refundable anytime.';
+            withdrawBtn.style.opacity = '1';
+          }
         } else {
           box.style.display = 'none';
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error fetching portfolio:', e);
+      }
     }
 
     function openWithdrawalModal() {
-      if (!currentPortfolioData || currentPortfolioData.totalBlocks === 0) {
+      if (!currentPortfolioData || (currentPortfolioData.totalBlocks === 0 && (!currentPortfolioData.boxes || currentPortfolioData.boxes.length === 0))) {
         return alert('You do not own any active stock blocks yet.');
       }
-      document.getElementById('withdrawableBalanceLabel').textContent = `Available Profit: ₹${currentPortfolioData.availableProfitBalance}`;
-      document.getElementById('withdrawAmountInput').value = currentPortfolioData.availableProfitBalance > 0 ? currentPortfolioData.availableProfitBalance : '';
+
+      if (currentPortfolioData.batchStatus === 'IN_PRODUCTION') {
+        return alert('🔒 Funds Locked: Batch is currently in manufacturing. Withdrawal will open once products are sold.');
+      }
+
+      if (currentPortfolioData.batchStatus === 'SETTLED' && !currentPortfolioData.isWeekCompleted) {
+        return alert(`⏳ 1-Week Profit Lock Active: ${currentPortfolioData.daysHeld || 0}/7 days passed. Interest and capital will unlock after 7 days of investment.`);
+      }
+
+      const withdrawable = currentPortfolioData.availableProfitBalance || 0;
+      if (withdrawable <= 0) {
+        return alert('No withdrawable balance available right now.');
+      }
+
+      document.getElementById('withdrawableBalanceLabel').textContent = `Withdrawable Amount: ₹${withdrawable}`;
+      document.getElementById('withdrawAmountInput').value = withdrawable;
       openModal('withdrawalModal');
     }
 
@@ -2077,34 +2143,37 @@
       if (!amt || amt <= 0) return alert('Please enter a valid withdrawal amount.');
 
       if (amt > currentPortfolioData.availableProfitBalance) {
-        return alert(`Requested amount exceeds your available profit (₹${currentPortfolioData.availableProfitBalance}).`);
+        return alert(`Requested amount exceeds your available balance (₹${currentPortfolioData.availableProfitBalance}).`);
       }
 
-      let payoutDetails = {};
+      let payload = {
+        phone: currentUser.phone,
+        amount: amt,
+        payoutMethod: selectedPayoutMethod
+      };
+
       if (selectedPayoutMethod === 'UPI') {
         const upi = document.getElementById('withdrawUpiId').value.trim();
-        if (!upi || !upi.includes('@')) return alert('Please enter a valid UPI ID (e.g. name@okhdfcbank).');
-        payoutDetails = { upiId: upi };
+        if (!upi || !upi.includes('@')) return alert('Please enter a valid UPI ID (e.g. mobile@upi, name@okaxis).');
+        payload.upiId = upi;
       } else {
         const accName = document.getElementById('bankAccName').value.trim();
         const accNum = document.getElementById('bankAccNumber').value.trim();
         const ifsc = document.getElementById('bankIfsc').value.trim().toUpperCase();
         const bName = document.getElementById('bankName').value.trim();
 
-        if (!accName || !accNum || !ifsc) return alert('Please enter complete bank account details.');
-        payoutDetails = { accountName: accName, accountNumber: accNum, ifscCode: ifsc, bankName: bName };
+        if (!accName || !accNum || !ifsc || !bName) return alert('Please enter complete bank account details (Holder Name, Bank, Account No, IFSC).');
+        payload.accountHolder = accName;
+        payload.accountNumber = accNum;
+        payload.ifscCode = ifsc;
+        payload.bankName = bName;
       }
 
       try {
-        const res = await fetch(`${API_URL}/grid/withdraw`, {
+        const res = await fetch(`${API_URL}/grid/request-withdrawal`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: currentUser.phone,
-            amount: amt,
-            payoutMethod: selectedPayoutMethod,
-            payoutDetails
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -2318,11 +2387,11 @@
           const portRes = await fetch(`${API_URL}/grid/my-portfolio?phone=${currentUser.phone}`);
           const portData = await portRes.json();
           currentPortfolioData = portData;
-          if (portData.totalBlocks > 0) {
+          if (portData.totalBlocks > 0 || (portData.boxes && portData.boxes.length > 0)) {
             document.getElementById('gridQuickStats').style.display = 'block';
-            document.getElementById('gHoldBlocks').textContent = `${portData.totalBlocks} Blocks`;
-            document.getElementById('gHoldYield').textContent = `+₹${portData.totalDailyYield}/day`;
-            document.getElementById('gHoldAvail').textContent = `₹${portData.availableProfitBalance}`;
+            document.getElementById('gHoldBlocks').textContent = `${portData.totalBlocks || portData.boxes.length} Blocks`;
+            document.getElementById('gHoldYield').textContent = portData.totalDailyYield || `50% Pool`;
+            document.getElementById('gHoldAvail').textContent = `₹${portData.availableProfitBalance || 0}`;
           }
         }
 
