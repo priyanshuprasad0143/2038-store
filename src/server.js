@@ -104,26 +104,26 @@ const gridRequestSchema = new mongoose.Schema({
 });
 const GridRequest = mongoose.model('GridRequest', gridRequestSchema);
 
-// Withdrawal Request Schema
+// WITHDRAWAL REQUEST SCHEMA
 const withdrawalSchema = new mongoose.Schema({
   withdrawalId: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   customerName: { type: String, required: true },
   amount: { type: Number, required: true },
-  payoutMethod: { type: String, required: true }, // 'UPI' or 'BANK'
-  payoutDetails: {
-    upiId: { type: String, default: '' },
-    accountName: { type: String, default: '' },
-    accountNumber: { type: String, default: '' },
-    ifscCode: { type: String, default: '' },
-    bankName: { type: String, default: '' }
-  },
-  adminRefNumber: { type: String, default: '' },
-  status: { type: String, default: 'Pending' }, // 'Pending', 'Approved', 'Rejected'
+  type: { type: String, default: 'PROFIT' },
+  payoutMethod: { type: String, default: 'BANK' }, // BANK or UPI
+  accountHolder: { type: String, default: '' },
+  bankName: { type: String, default: '' },
+  accountNumber: { type: String, default: '' },
+  ifscCode: { type: String, default: '' },
+  upiId: { type: String, default: '' },
+  status: { type: String, default: 'Pending' }, // Pending, Approved, Rejected
+  transactionRef: { type: String, default: '' },
+  reason: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   processedAt: { type: Date, default: null }
 });
-const Withdrawal = mongoose.model('Withdrawal', withdrawalSchema);
+const WithdrawalRequest = mongoose.model('WithdrawalRequest', withdrawalSchema);
 
 const pincodeSchema = new mongoose.Schema({
   code: { type: String, required: true, unique: true }
@@ -206,6 +206,11 @@ async function initializeDefaults() {
       await Config.create({ key: 'support_phone', value: '9123456789' });
     }
 
+    const dailyRateExists = await Config.findOne({ key: 'daily_rate' });
+    if (!dailyRateExists) {
+      await Config.create({ key: 'daily_rate', value: '2' }); // 2% per day default
+    }
+
     const welcomeCoupon = await Coupon.findOne({ code: 'WELCOME50' });
     if (!welcomeCoupon) {
       await Coupon.create({
@@ -274,7 +279,7 @@ const verifyRiderToken = async (req, res, next) => {
 };
 
 // ==========================================
-// 3. STATIC & MULTI-PWA ROUTES
+// 3. MULTI-PWA ROUTING & SCOPES
 // ==========================================
 
 // Global Service Worker
@@ -313,6 +318,27 @@ app.get('/manifest-admin.json', (req, res) => {
 // ==========================================
 // 4. API ROUTES
 // ==========================================
+
+// Daily Rate APIs
+app.get('/api/config/daily-rate', async (req, res) => {
+  try {
+    const cfg = await Config.findOne({ key: 'daily_rate' });
+    res.json({ success: true, rate: cfg ? Number(cfg.value) : 2 });
+  } catch (e) {
+    res.json({ success: true, rate: 2 });
+  }
+});
+
+app.post('/api/admin/config/daily-rate', verifyAdminToken, async (req, res) => {
+  try {
+    const { rate } = req.body;
+    if (rate === undefined || rate <= 0) return res.status(400).json({ success: false, message: 'Valid rate required.' });
+    await Config.findOneAndUpdate({ key: 'daily_rate' }, { value: String(rate) }, { upsert: true });
+    res.json({ success: true, message: `Daily profit rate set to ${rate}% per day.` });
+  } catch (e) {
+    res.status(500).json({ success: false, message: 'Failed to update daily rate.' });
+  }
+});
 
 app.get('/api/config/store-status', async (req, res) => {
   try {
@@ -523,55 +549,14 @@ app.get('/api/grid/boxes', async (req, res) => {
   }
 });
 
-// Enhanced Portfolio API with Daily Profit Calculation
 app.get('/api/grid/my-portfolio', async (req, res) => {
   try {
     const phone = String(req.query.phone || '').trim();
     const boxes = await GridBox.find({ ownerPhone: phone, status: 'owned' }).sort({ boxNumber: 1 });
-    
-    // Profit Calculation (₹2 / box / day, min 1 day)
-    let totalInvested = boxes.length * 100;
-    let totalAccumulatedProfit = 0;
-    const now = new Date();
+    const cfg = await Config.findOne({ key: 'daily_rate' });
+    const dailyRate = cfg ? Number(cfg.value) : 2;
 
-    const enrichedBoxes = boxes.map(b => {
-      const boughtDate = b.boughtAt ? new Date(b.boughtAt) : now;
-      const diffMs = Math.max(0, now - boughtDate);
-      const daysHeld = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
-      const boxProfit = daysHeld * 2; // ₹2 profit per box per day
-      totalAccumulatedProfit += boxProfit;
-      return {
-        boxNumber: b.boxNumber,
-        boughtAt: b.boughtAt,
-        daysHeld,
-        dailyProfitRate: 2,
-        profitAccrued: boxProfit
-      };
-    });
-
-    // Deduct already approved withdrawals
-    const pastWithdrawals = await Withdrawal.find({ phone, status: 'Approved' });
-    const totalWithdrawn = pastWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-
-    const pendingWithdrawals = await Withdrawal.find({ phone, status: 'Pending' });
-    const pendingWithdrawnAmount = pendingWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-
-    const totalCurrentEarnings = totalAccumulatedProfit;
-    const availableProfitBalance = Math.max(0, totalAccumulatedProfit - totalWithdrawn - pendingWithdrawnAmount);
-
-    res.json({
-      success: true,
-      boxes,
-      enrichedBoxes,
-      totalBlocks: boxes.length,
-      totalInvested,
-      dailyRatePerBlock: 2,
-      totalDailyYield: boxes.length * 2,
-      totalCurrentEarnings,
-      totalWithdrawn,
-      pendingWithdrawnAmount,
-      availableProfitBalance
-    });
+    res.json({ success: true, boxes, dailyRate });
   } catch (e) {
     res.status(500).json({ success: false });
   }
@@ -599,7 +584,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Customer account not found. Please register or sign in.' });
     }
 
-    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
+    const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: {$ne: 'available' } });
     if (unavailable.length > 0) {
       const takenNums = unavailable.map(b => `#${b.boxNumber}`).join(', ');
       return res.status(400).json({ success: false, message: `Block(s) ${takenNums} are currently unavailable.` });
@@ -725,52 +710,45 @@ app.post('/api/grid/revoke-box', verifyAdminToken, async (req, res) => {
 });
 
 // ==========================================
-// 5. WITHDRAWAL APIS
+// 5. WITHDRAWAL APIS (CUSTOMER & ADMIN)
 // ==========================================
 
-// Customer Submits Withdrawal Request
-app.post('/api/grid/withdraw', async (req, res) => {
+// Customer requests withdrawal
+app.post('/api/grid/request-withdrawal', async (req, res) => {
   try {
-    const { phone, amount, payoutMethod, payoutDetails } = req.body;
-    const cleanPhone = String(phone || '').trim();
-    const withdrawAmount = Number(amount);
+    const { phone, amount, type, payoutMethod, accountHolder, bankName, accountNumber, ifscCode, upiId } = req.body;
+    const numAmount = Number(amount);
 
-    if (!cleanPhone || !withdrawAmount || withdrawAmount <= 0) {
-      return res.status(400).json({ success: false, message: 'Valid withdrawal amount required.' });
+    if (!phone || !numAmount || numAmount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid phone and withdrawal amount are required.' });
     }
 
-    const user = await User.findOne({ phone: cleanPhone });
-    if (!user) return res.status(404).json({ success: false, message: 'Customer account not found.' });
+    const user = await User.findOne({ phone: String(phone).trim() });
+    if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
 
-    // Validate Available Balance
-    const boxes = await GridBox.find({ ownerPhone: cleanPhone, status: 'owned' });
-    const now = new Date();
-    let totalProfit = 0;
-    boxes.forEach(b => {
-      const diffMs = Math.max(0, now - (b.boughtAt ? new Date(b.boughtAt) : now));
-      const days = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
-      totalProfit += (days * 2);
-    });
-
-    const pastW = await Withdrawal.find({ phone: cleanPhone, status: { $in: ['Approved', 'Pending'] } });
-    const lockedAmount = pastW.reduce((sum, w) => sum + w.amount, 0);
-    const available = Math.max(0, totalProfit - lockedAmount);
-
-    if (withdrawAmount > available) {
-      return res.status(400).json({
-        success: false,
-        message: `Requested amount (₹${withdrawAmount}) exceeds your available withdrawable profit (₹${available}).`
-      });
+    if (payoutMethod === 'BANK') {
+      if (!accountHolder || !bankName || !accountNumber || !ifscCode) {
+        return res.status(400).json({ success: false, message: 'All bank details (Holder Name, Bank, Account No, IFSC) are required.' });
+      }
+    } else if (payoutMethod === 'UPI') {
+      if (!upiId) {
+        return res.status(400).json({ success: false, message: 'Valid UPI identifier is required.' });
+      }
     }
 
     const withdrawalId = `WTH-${Date.now().toString().slice(-6)}`;
-    const newWithdrawal = await Withdrawal.create({
+    const newWithdrawal = await WithdrawalRequest.create({
       withdrawalId,
-      phone: cleanPhone,
+      phone: user.phone,
       customerName: user.name,
-      amount: withdrawAmount,
-      payoutMethod: payoutMethod || 'UPI',
-      payoutDetails: payoutDetails || {},
+      amount: numAmount,
+      type: type || 'PROFIT',
+      payoutMethod: payoutMethod || 'BANK',
+      accountHolder: accountHolder || '',
+      bankName: bankName || '',
+      accountNumber: accountNumber || '',
+      ifscCode: ifscCode || '',
+      upiId: upiId || '',
       status: 'Pending'
     });
 
@@ -779,65 +757,58 @@ app.post('/api/grid/withdraw', async (req, res) => {
       message: 'Withdrawal request submitted! Administration will review and transfer funds.',
       withdrawal: newWithdrawal
     });
-  } catch (err) {
-    res.status(500).json({ success: false, message: 'Withdrawal request submission failed.' });
-  }
-});
-
-// Customer View Own Withdrawals
-app.get('/api/grid/my-withdrawals', async (req, res) => {
-  try {
-    const phone = String(req.query.phone || '').trim();
-    const list = await Withdrawal.find({ phone }).sort({ createdAt: -1 });
-    res.json({ success: true, withdrawals: list });
   } catch (e) {
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: 'Failed to submit withdrawal request.' });
   }
 });
 
-// Admin View All Withdrawals
-app.get('/api/admin/withdrawals', verifyAdminToken, async (req, res) => {
+// Admin fetches all withdrawals
+app.get('/api/admin/grid/withdrawals', verifyAdminToken, async (req, res) => {
   try {
-    const list = await Withdrawal.find({}).sort({ createdAt: -1 });
-    res.json({ success: true, withdrawals: list });
+    const withdrawals = await WithdrawalRequest.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, withdrawals });
   } catch (e) {
-    res.status(500).json({ success: false });
+    res.status(500).json({ success: false, message: 'Failed to fetch withdrawals.' });
   }
 });
 
-// Admin Approves Withdrawal
-app.post('/api/admin/withdrawals/approve', verifyAdminToken, async (req, res) => {
+// Admin approves withdrawal
+app.post('/api/admin/grid/approve-withdrawal', verifyAdminToken, async (req, res) => {
   try {
-    const { withdrawalId, adminRefNumber } = req.body;
-    const w = await Withdrawal.findOne({ withdrawalId });
-    if (!w) return res.status(404).json({ success: false, message: 'Withdrawal request not found.' });
+    const { withdrawalId, transactionRef } = req.body;
+    if (!withdrawalId || !transactionRef) {
+      return res.status(400).json({ success: false, message: 'Withdrawal ID and Transaction Reference are mandatory.' });
+    }
 
-    w.status = 'Approved';
-    w.adminRefNumber = adminRefNumber || 'TRF-DONE';
-    w.processedAt = new Date();
-    await w.save();
+    const item = await WithdrawalRequest.findOne({ withdrawalId });
+    if (!item) return res.status(404).json({ success: false, message: 'Withdrawal request not found.' });
 
-    res.json({ success: true, message: `Withdrawal #${withdrawalId} approved and marked as transferred.` });
+    item.status = 'Approved';
+    item.transactionRef = String(transactionRef).trim();
+    item.processedAt = new Date();
+    await item.save();
+
+    res.json({ success: true, message: `Withdrawal #${withdrawalId} approved and marked as Paid.` });
   } catch (e) {
-    res.status(500).json({ success: false, message: 'Approval failed.' });
+    res.status(500).json({ success: false, message: 'Failed to approve withdrawal.' });
   }
 });
 
-// Admin Rejects Withdrawal
-app.post('/api/admin/withdrawals/reject', verifyAdminToken, async (req, res) => {
+// Admin rejects withdrawal
+app.post('/api/admin/grid/reject-withdrawal', verifyAdminToken, async (req, res) => {
   try {
     const { withdrawalId, reason } = req.body;
-    const w = await Withdrawal.findOne({ withdrawalId });
-    if (!w) return res.status(404).json({ success: false, message: 'Withdrawal request not found.' });
+    const item = await WithdrawalRequest.findOne({ withdrawalId });
+    if (!item) return res.status(404).json({ success: false, message: 'Withdrawal request not found.' });
 
-    w.status = 'Rejected';
-    w.adminRefNumber = reason || 'Rejected by Admin';
-    w.processedAt = new Date();
-    await w.save();
+    item.status = 'Rejected';
+    item.reason = reason || 'Details verification failed';
+    item.processedAt = new Date();
+    await item.save();
 
-    res.json({ success: true, message: `Withdrawal #${withdrawalId} rejected. Funds returned to user balance.` });
+    res.json({ success: true, message: `Withdrawal #${withdrawalId} rejected.` });
   } catch (e) {
-    res.status(500).json({ success: false, message: 'Rejection failed.' });
+    res.status(500).json({ success: false, message: 'Failed to reject withdrawal.' });
   }
 });
 
