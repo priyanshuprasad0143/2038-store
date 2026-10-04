@@ -121,20 +121,6 @@
       border-color: #ef4444;
     }
 
-    .btn-install-portal {
-      background: rgba(16, 185, 129, 0.18);
-      color: #34d399;
-      border: 1.5px solid var(--brand-green);
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 900;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
     #soundAlarmBanner {
       display: none;
       background: #dc2626;
@@ -282,10 +268,6 @@
           <span id="storeStatusText">Store Online</span>
         </button>
 
-        <button class="btn-install-portal" id="btnInstallAdminApp" onclick="installAdminAppDirect()">
-          <span>📲</span> <span>Install Admin</span>
-        </button>
-
         <button class="btn-action" title="Test Alert Ringtone" onclick="testAudioAlert()">
           🔔 Test Chime
         </button>
@@ -313,7 +295,7 @@
         <button class="nav-btn" onclick="switchTab('couponsTab', this)">🏷️ Promo Codes</button>
         <button class="nav-btn" onclick="switchTab('productsTab', this)">🛍 Catalog</button>
         <button class="nav-btn" onclick="switchTab('pincodesTab', this)">📍 Postal Hubs</button>
-        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Grid Stock & UTR</button>
+        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Grid Stock & Payouts</button>
         <button class="nav-btn" onclick="switchTab('settingsTab', this)">⚙ Settings</button>
       </div>
 
@@ -394,7 +376,7 @@
         </div>
       </div>
 
-      <!-- Tab 5: Grid Stock -->
+      <!-- Tab 5: Grid Stock & Payouts -->
       <div id="gridTab" class="panel-section">
         <div class="panel-card">
           <div class="panel-header">Store UPI Identifier Configuration</div>
@@ -405,9 +387,27 @@
         </div>
 
         <div class="panel-card">
+          <div class="panel-header">Daily Profit Return Rate (% per day)</div>
+          <div style="display:flex; gap:8px;">
+            <input type="number" id="dailyProfitRateInput" class="input-field" placeholder="e.g. 2 for 2% daily" step="0.1" style="margin-bottom:0;" />
+            <button class="btn-submit" style="width:auto; padding:0 16px;" onclick="saveDailyProfitRate()">Update Rate</button>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">All investors will earn this daily percentage profit on their total block holdings.</div>
+        </div>
+
+        <!-- NEW: Pending Customer Withdrawals -->
+        <div class="panel-card" style="border:1.5px solid var(--brand-yellow);">
           <div class="panel-header">
-            <span>Pending Stock UTR Requests</span>
-            <button class="btn-action" onclick="fetchGridDetails()">🔄 Refresh</button>
+            <span style="color:var(--brand-yellow);">💸 Customer Withdrawal Requests</span>
+            <button class="btn-action" onclick="fetchWithdrawalRequests()">🔄 Refresh Payouts</button>
+          </div>
+          <div id="pendingWithdrawalsContainer">Loading payout requests...</div>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-header">
+            <span>Pending Stock Purchase UTR Requests</span>
+            <button class="btn-action" onclick="fetchGridDetails()">🔄 Refresh UTR</button>
           </div>
           <div id="pendingUtrContainer">Loading pending requests...</div>
         </div>
@@ -450,22 +450,6 @@
     let alarmAudioInterval = null;
     let currentOrdersCache = [];
     let audioContext = null;
-    let adminInstallPrompt = null;
-
-    // Capture install prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      adminInstallPrompt = e;
-    });
-
-    function installAdminAppDirect() {
-      if (adminInstallPrompt) {
-        adminInstallPrompt.prompt();
-        adminInstallPrompt.userChoice.then(() => { adminInstallPrompt = null; });
-      } else {
-        alert('To install 2038 Admin App as separate icon:\n\n1. Tap the top-right Chrome menu (⋮)\n2. Select "Add to Home screen" or "Install app"\n3. Name it "2038 Admin" and confirm.');
-      }
-    }
 
     let adminTheme = localStorage.getItem('2038_admin_theme') || 'dark';
     applyAdminTheme(adminTheme);
@@ -584,7 +568,9 @@
       fetchProducts();
       fetchPincodes();
       fetchGridDetails();
+      fetchWithdrawalRequests();
       loadAdminUpi();
+      loadDailyProfitRate();
       loadStoreHelpline();
 
       setInterval(pollForNewOrders, 5000);
@@ -693,6 +679,135 @@
         if (data.success) alert('Store UPI configuration updated.');
         else alert(data.message);
       } catch (e) { alert('Failed to save UPI identifier.'); }
+    }
+
+    async function loadDailyProfitRate() {
+      try {
+        const res = await fetch(`${API_URL}/config/daily-rate`);
+        const data = await res.json();
+        document.getElementById('dailyProfitRateInput').value = data.rate || 2;
+      } catch (e) {}
+    }
+
+    async function saveDailyProfitRate() {
+      const rate = document.getElementById('dailyProfitRateInput').value;
+      if (!rate || rate <= 0) return alert('Please enter a valid daily rate percentage.');
+
+      try {
+        const res = await fetch(`${API_URL}/admin/config/daily-rate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ rate: Number(rate) })
+        });
+        const data = await res.json();
+        if (data.success) alert('Daily profit rate updated successfully!');
+        else alert(data.message);
+      } catch (e) { alert('Failed to save rate.'); }
+    }
+
+    // NEW: Customer Withdrawal Management
+    async function fetchWithdrawalRequests() {
+      const container = document.getElementById('pendingWithdrawalsContainer');
+      try {
+        const res = await fetch(`${API_URL}/admin/grid/withdrawals`, {
+          headers: { 'x-admin-token': adminToken }
+        });
+        const data = await res.json();
+        const withdrawals = data.withdrawals || [];
+        const pending = withdrawals.filter(w => w.status === 'Pending');
+
+        if (pending.length === 0) {
+          container.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No pending customer withdrawal requests right now.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        pending.forEach(w => {
+          const card = document.createElement('div');
+          card.style.cssText = 'background:var(--inner-card); border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; display:flex; flex-direction:column; gap:8px;';
+
+          let payoutDetails = '';
+          if (w.payoutMethod === 'BANK') {
+            payoutDetails = `
+              <div style="background:rgba(255,255,255,0.04); border-radius:6px; padding:8px; font-size:11px; margin:4px 0;">
+                <div>Holder: <b>${w.accountHolder}</b></div>
+                <div>Bank: <b>${w.bankName}</b></div>
+                <div>A/C Number: <b style="color:#38bdf8; letter-spacing:1px;">${w.accountNumber}</b></div>
+                <div>IFSC: <b style="color:var(--brand-yellow);">${w.ifscCode}</b></div>
+              </div>
+            `;
+          } else {
+            payoutDetails = `
+              <div style="background:rgba(255,255,255,0.04); border-radius:6px; padding:8px; font-size:11px; margin:4px 0;">
+                <div>UPI Identifier: <b style="color:#38bdf8;">${w.upiId}</b></div>
+              </div>
+            `;
+          }
+
+          card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div>
+                <b style="font-size:13px; color:var(--text);">${w.customerName} (+91 ${w.phone})</b>
+                <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">Requested: ${new Date(w.createdAt).toLocaleString()}</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:15px; font-weight:900; color:var(--brand-yellow);">₹${w.amount}</div>
+                <span style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(248, 203, 70, 0.15); color:var(--brand-yellow); font-weight:800;">${w.type || 'PROFIT'}</span>
+              </div>
+            </div>
+
+            ${payoutDetails}
+
+            <div style="display:flex; gap:8px; margin-top:4px;">
+              <button class="btn-action btn-success" style="flex:1; padding:8px;" onclick="approveWithdrawalPayout('${w.withdrawalId}')">
+                ✅ Paid & Approve
+              </button>
+              <button class="btn-action btn-danger" style="flex:1; padding:8px;" onclick="rejectWithdrawalPayout('${w.withdrawalId}')">
+                ❌ Reject Request
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        container.innerHTML = '<p style="color:red; font-size:12px;">Failed to retrieve withdrawal requests.</p>';
+      }
+    }
+
+    async function approveWithdrawalPayout(withdrawalId) {
+      const ref = prompt('Enter Bank / UPI Transaction Reference (UTR/Ref Number):');
+      if (!ref) return alert('Transaction reference is mandatory for reconciliation.');
+
+      try {
+        const res = await fetch(`${API_URL}/admin/grid/approve-withdrawal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ withdrawalId, transactionRef: ref })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          fetchWithdrawalRequests();
+        } else alert(data.message);
+      } catch (e) { alert('Approval failed.'); }
+    }
+
+    async function rejectWithdrawalPayout(withdrawalId) {
+      const reason = prompt('Enter rejection reason for customer:') || 'Details incorrect';
+      if (!confirm(`Reject Withdrawal Request #${withdrawalId}?`)) return;
+
+      try {
+        const res = await fetch(`${API_URL}/admin/grid/reject-withdrawal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+          body: JSON.stringify({ withdrawalId, reason })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message);
+          fetchWithdrawalRequests();
+        } else alert(data.message);
+      } catch (e) { alert('Rejection failed.'); }
     }
 
     async function fetchCoupons() {
@@ -1008,7 +1123,7 @@
       const res = await fetch(`${API_URL}/products/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
-        body: JSON.stringify({ name, category, price, stock, unit, image })
+        body: JSON.stringify({ name, category, price, stock, unit, badge: 'FRESH', image })
       });
       const data = await res.json();
       if (data.success) {

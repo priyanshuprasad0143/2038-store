@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>2038</title>
   
-  <!-- PWA Manifest & App Theme -->
   <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#00e676" />
+  <meta name="theme-color" content="#00c853" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
@@ -15,7 +14,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Cinzel:wght@600;700;900&display=swap" rel="stylesheet">
 
-  <!-- PDF Engine Libraries (100% Free CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -853,6 +851,23 @@
     .stamp-text-top { font-size: 6px; font-weight: 900; color: #78350f; text-transform: uppercase; letter-spacing: 0.5px; }
     .stamp-core { font-size: 16px; font-weight: 900; color: #b45309; font-family: 'Cinzel', serif; line-height: 1; margin: 1px 0; }
     .stamp-text-sub { font-size: 5px; font-weight: 800; color: #92400e; text-transform: uppercase; }
+
+    /* PROFIT & PORTFOLIO CARDS */
+    .profit-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .profit-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+    }
+    .profit-card-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .profit-card-val { font-size: 18px; font-weight: 900; color: #fff; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -1106,7 +1121,7 @@
     </div>
   </div>
 
-  <!-- Profile Dashboard Modal with Digital Certificate Trigger -->
+  <!-- Profile Dashboard Modal with Live Earnings & Withdrawal -->
   <div id="profileDashboardModal" class="drawer-overlay">
     <div class="drawer-content">
       <div class="drawer-header">
@@ -1125,14 +1140,40 @@
         </div>
       </div>
 
-      <!-- Digital Stock Certificate Banner -->
-      <div id="userCertificateBanner" style="display:none; background:linear-gradient(135deg, rgba(255,171,0,0.15), rgba(255,143,0,0.05)); border:1.5px solid var(--accent-gold); border-radius:16px; padding:16px; margin-bottom:16px; text-align:center;">
-        <div style="font-size:24px; margin-bottom:4px;">📜</div>
-        <div style="font-weight:900; font-size:14px; color:var(--accent-gold);">Founder Stock Portfolio Active</div>
-        <div style="font-size:11px; color:var(--text-muted); margin:4px 0 12px;" id="userOwnedBlocksDesc">You hold verified equity blocks in 2038.</div>
-        <button onclick="openCertificateModal()" style="background:var(--accent-gold); color:#000; border:none; padding:10px 16px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer; box-shadow:0 4px 12px rgba(255,171,0,0.3);">
-          View & Download Equity Certificate 📥
-        </button>
+      <!-- Live Profit & Stock Portfolio Stats -->
+      <div id="userPortfolioBox" style="display:none; background:linear-gradient(135deg, #090d16, #111827); border:1.5px solid var(--accent-gold); border-radius:16px; padding:16px; margin-bottom:16px; text-align:center; color:#fff;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <span style="font-size:11px; font-weight:900; color:var(--accent-gold); letter-spacing:1px;">📈 2038 STOCK PORTFOLIO</span>
+          <span style="font-size:10px; background:rgba(0,200,83,0.15); color:var(--primary); padding:2px 8px; border-radius:12px; font-weight:800;">● Active Yield</span>
+        </div>
+
+        <div class="profit-stats-grid">
+          <div class="profit-card">
+            <div class="profit-card-label">Total Invested</div>
+            <div class="profit-card-val" id="profTotalInvested">₹0</div>
+          </div>
+          <div class="profit-card">
+            <div class="profit-card-label">Daily Profit Rate</div>
+            <div class="profit-card-val" style="color:var(--primary);" id="profDailyRate">₹0/day</div>
+          </div>
+          <div class="profit-card">
+            <div class="profit-card-label">Total Earned</div>
+            <div class="profit-card-val" style="color:var(--accent-gold);" id="profTotalEarned">₹0</div>
+          </div>
+          <div class="profit-card">
+            <div class="profit-card-label">Withdrawable</div>
+            <div class="profit-card-val" style="color:#38bdf8;" id="profAvailableProfit">₹0</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button onclick="openWithdrawalModal()" style="flex:1; background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#000; border:none; padding:10px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer;">
+            💸 Withdraw Profit
+          </button>
+          <button onclick="openCertificateModal()" style="flex:1; background:rgba(255,171,0,0.15); border:1px solid var(--accent-gold); color:var(--accent-gold); padding:10px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer;">
+            📜 Certificate
+          </button>
+        </div>
       </div>
 
       <div style="margin-bottom:16px;">
@@ -1158,6 +1199,47 @@
     </div>
   </div>
 
+  <!-- WITHDRAWAL MODAL (WITH BANK / UPI FORM) -->
+  <div id="withdrawalModal" class="drawer-overlay">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <div>
+          <h3 style="font-size:18px; font-weight:900;">💸 Withdraw Funds</h3>
+          <p style="font-size:11px; color:var(--primary); font-weight:800;" id="withdrawableBalanceLabel">Available: ₹0</p>
+        </div>
+        <button class="btn-close" onclick="closeModal('withdrawalModal')">✕</button>
+      </div>
+
+      <div style="font-size:11px; font-weight:900; color:var(--text-muted); margin-bottom:4px;">ENTER WITHDRAWAL AMOUNT (₹):</div>
+      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="Amount (e.g. 50)" />
+
+      <div style="font-size:11px; font-weight:900; color:var(--text-muted); margin:10px 0 6px;">SELECT PAYOUT METHOD:</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+        <button type="button" class="btn-add" id="btnPayoutUpi" style="padding:10px; background:var(--primary); color:#000;" onclick="selectPayoutType('UPI')">📲 Instant UPI</button>
+        <button type="button" class="btn-add" id="btnPayoutBank" style="padding:10px; background:var(--border-subtle); color:var(--text-main);" onclick="selectPayoutType('BANK')">🏦 Bank Account</button>
+      </div>
+
+      <!-- UPI Details Form -->
+      <div id="payoutUpiForm">
+        <input type="text" id="withdrawUpiId" class="input-field" placeholder="Enter UPI ID (e.g. mobile@upi, name@okaxis)" />
+      </div>
+
+      <!-- Bank Details Form -->
+      <div id="payoutBankForm" style="display:none;">
+        <input type="text" id="bankAccName" class="input-field" placeholder="Account Holder Legal Name" />
+        <input type="text" id="bankAccNumber" class="input-field" placeholder="Bank Account Number" />
+        <input type="text" id="bankIfsc" class="input-field" placeholder="IFSC Code (e.g. SBIN0001234)" style="text-transform:uppercase;" />
+        <input type="text" id="bankName" class="input-field" placeholder="Bank Name (e.g. State Bank of India)" />
+      </div>
+
+      <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px; font-weight:600;">
+        ⚠️ Admin will verify and transfer directly to this account within 2-4 hours.
+      </p>
+
+      <button class="btn-primary" onclick="submitWithdrawalRequest()">Submit Withdrawal Request</button>
+    </div>
+  </div>
+
   <!-- LUXURY EQUITY CERTIFICATE MODAL -->
   <div id="certificateModal" class="drawer-overlay">
     <div class="drawer-content" style="max-width:620px; text-align:center; background:#fff; color:#000;">
@@ -1166,7 +1248,6 @@
         <button class="btn-close" style="background:#f1f5f9; color:#0f172a;" onclick="closeModal('certificateModal')">✕</button>
       </div>
 
-      <!-- Renderable Canvas Container -->
       <div class="certificate-card-canvas" id="certificateRenderBox">
         <div class="cert-watermark">2038</div>
         <div class="cert-inner">
@@ -1201,7 +1282,6 @@
           </div>
         </div>
 
-        <!-- Official Gold Stamp Badge -->
         <div class="cert-gold-stamp">
           <span class="stamp-text-top">★ 2038 ★</span>
           <span class="stamp-core">SEAL</span>
@@ -1281,9 +1361,23 @@
       <div class="drawer-header" style="border-color:rgba(255,255,255,0.08);">
         <div>
           <h3 style="font-size:18px; font-weight:900; color:var(--accent-gold);">📈 2038 Grid Stock</h3>
-          <p style="font-size:11px; color:#94a3b8; font-weight:600;">Digital Equity Ownership</p>
+          <p style="font-size:11px; color:#94a3b8; font-weight:600;">Earn ₹2 Daily Profit per Block</p>
         </div>
         <button class="btn-close" style="background:rgba(255,255,255,0.08); color:white;" onclick="closeModal('gridStockModal')">✕</button>
+      </div>
+
+      <!-- Quick Portfolio Snippet if holding blocks -->
+      <div id="gridQuickStats" style="display:none; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; margin-bottom:12px; border:1px solid rgba(255,171,0,0.3);">
+        <div style="display:flex; justify-content:space-between; font-size:11px;">
+          <span>Holding: <b id="gHoldBlocks" style="color:var(--accent-gold);">0 Blocks</b></span>
+          <span>Daily Profit: <b id="gHoldYield" style="color:var(--primary);">+₹0/day</b></span>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+          <span style="font-size:11px;">Balance: <b id="gHoldAvail" style="color:#38bdf8;">₹0</b></span>
+          <button onclick="closeModal('gridStockModal'); openWithdrawalModal();" style="background:var(--primary); color:#000; border:none; padding:4px 10px; border-radius:6px; font-size:10px; font-weight:900; cursor:pointer;">
+            💸 Withdraw
+          </button>
+        </div>
       </div>
 
       <div style="display:flex; justify-content:space-between; margin-bottom:14px; font-size:12px; color:#94a3b8; font-weight:700; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:10px;">
@@ -1435,6 +1529,8 @@
     let detectedLat = null;
     let detectedLng = null;
     let userOwnedBoxesCache = [];
+    let currentPortfolioData = null;
+    let selectedPayoutMethod = 'UPI';
 
     let activeTrackId = null;
     let allGridBoxes = [];
@@ -1927,17 +2023,101 @@
       try {
         const res = await fetch(`${API_URL}/grid/my-portfolio?phone=${currentUser.phone}`);
         const data = await res.json();
+        currentPortfolioData = data;
         userOwnedBoxesCache = data.boxes || [];
 
-        const banner = document.getElementById('userCertificateBanner');
+        const box = document.getElementById('userPortfolioBox');
         if (userOwnedBoxesCache.length > 0) {
-          banner.style.display = 'block';
-          const blocksStr = userOwnedBoxesCache.map(b => '#' + b.boxNumber).join(', ');
-          document.getElementById('userOwnedBlocksDesc').textContent = `You hold ${userOwnedBoxesCache.length} verified block(s): ${blocksStr}`;
+          box.style.display = 'block';
+          document.getElementById('profTotalInvested').textContent = `₹${data.totalInvested}`;
+          document.getElementById('profDailyRate').textContent = `+₹${data.totalDailyYield}/day`;
+          document.getElementById('profTotalEarned').textContent = `₹${data.totalCurrentEarnings}`;
+          document.getElementById('profAvailableProfit').textContent = `₹${data.availableProfitBalance}`;
         } else {
-          banner.style.display = 'none';
+          box.style.display = 'none';
         }
       } catch (e) {}
+    }
+
+    function openWithdrawalModal() {
+      if (!currentPortfolioData || currentPortfolioData.totalBlocks === 0) {
+        return alert('You do not own any active stock blocks yet.');
+      }
+      document.getElementById('withdrawableBalanceLabel').textContent = `Available Profit: ₹${currentPortfolioData.availableProfitBalance}`;
+      document.getElementById('withdrawAmountInput').value = currentPortfolioData.availableProfitBalance > 0 ? currentPortfolioData.availableProfitBalance : '';
+      openModal('withdrawalModal');
+    }
+
+    function selectPayoutType(type) {
+      selectedPayoutMethod = type;
+      const bUpi = document.getElementById('btnPayoutUpi');
+      const bBank = document.getElementById('btnPayoutBank');
+      const formUpi = document.getElementById('payoutUpiForm');
+      const formBank = document.getElementById('payoutBankForm');
+
+      if (type === 'UPI') {
+        bUpi.style.background = 'var(--primary)';
+        bUpi.style.color = '#000';
+        bBank.style.background = 'var(--border-subtle)';
+        bBank.style.color = 'var(--text-main)';
+        formUpi.style.display = 'block';
+        formBank.style.display = 'none';
+      } else {
+        bBank.style.background = 'var(--primary)';
+        bBank.style.color = '#000';
+        bUpi.style.background = 'var(--border-subtle)';
+        bUpi.style.color = 'var(--text-main)';
+        formUpi.style.display = 'none';
+        formBank.style.display = 'block';
+      }
+    }
+
+    async function submitWithdrawalRequest() {
+      const amt = Number(document.getElementById('withdrawAmountInput').value);
+      if (!amt || amt <= 0) return alert('Please enter a valid withdrawal amount.');
+
+      if (amt > currentPortfolioData.availableProfitBalance) {
+        return alert(`Requested amount exceeds your available profit (₹${currentPortfolioData.availableProfitBalance}).`);
+      }
+
+      let payoutDetails = {};
+      if (selectedPayoutMethod === 'UPI') {
+        const upi = document.getElementById('withdrawUpiId').value.trim();
+        if (!upi || !upi.includes('@')) return alert('Please enter a valid UPI ID (e.g. name@okhdfcbank).');
+        payoutDetails = { upiId: upi };
+      } else {
+        const accName = document.getElementById('bankAccName').value.trim();
+        const accNum = document.getElementById('bankAccNumber').value.trim();
+        const ifsc = document.getElementById('bankIfsc').value.trim().toUpperCase();
+        const bName = document.getElementById('bankName').value.trim();
+
+        if (!accName || !accNum || !ifsc) return alert('Please enter complete bank account details.');
+        payoutDetails = { accountName: accName, accountNumber: accNum, ifscCode: ifsc, bankName: bName };
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/grid/withdraw`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: currentUser.phone,
+            amount: amt,
+            payoutMethod: selectedPayoutMethod,
+            payoutDetails
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert('✅ ' + data.message);
+          closeModal('withdrawalModal');
+          openProfileDashboard();
+        } else {
+          alert('❌ ' + (data.message || 'Withdrawal submission failed.'));
+        }
+      } catch (e) {
+        alert('Server communication error.');
+      }
     }
 
     function openCertificateModal() {
@@ -1952,7 +2132,6 @@
       openModal('certificateModal');
     }
 
-    // High-Res PDF Download Function
     async function downloadCertificateAsPdf() {
       const btn = document.getElementById('btnDownloadCertPdf');
       const certElement = document.getElementById('certificateRenderBox');
@@ -2134,6 +2313,19 @@
         allGridBoxes = data.boxes || [];
         document.getElementById('availBoxesCount').textContent = allGridBoxes.filter(b => b.status === 'available').length;
 
+        // Quick stats check
+        if (currentUser && currentUser.phone) {
+          const portRes = await fetch(`${API_URL}/grid/my-portfolio?phone=${currentUser.phone}`);
+          const portData = await portRes.json();
+          currentPortfolioData = portData;
+          if (portData.totalBlocks > 0) {
+            document.getElementById('gridQuickStats').style.display = 'block';
+            document.getElementById('gHoldBlocks').textContent = `${portData.totalBlocks} Blocks`;
+            document.getElementById('gHoldYield').textContent = `+₹${portData.totalDailyYield}/day`;
+            document.getElementById('gHoldAvail').textContent = `₹${portData.availableProfitBalance}`;
+          }
+        }
+
         container.innerHTML = '';
         allGridBoxes.forEach(b => {
           const cell = document.createElement('div');
@@ -2312,7 +2504,6 @@
       } else { alert(data.message); }
     }
 
-    // Native Service Worker for Customer App
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js');
