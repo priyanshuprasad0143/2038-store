@@ -692,9 +692,30 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       text-decoration: none;
       box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-copy-upi {
+      width: 100%;
+      background: var(--border-subtle);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-color);
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .btn-copy-upi:hover {
+      border-color: var(--primary);
     }
 
     .btn-gps-locate {
@@ -1012,7 +1033,7 @@
 
   <div class="mobile-bottom-bar">
     <button class="bottom-nav-item active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-      <span>🛍️️</span><span>Store</span>
+      <span>🛍</span><span>Store</span>
     </button>
     <button class="bottom-nav-item" onclick="openModal('gridStockModal')">
       <span>📈</span><span>Invest</span>
@@ -1131,6 +1152,11 @@
         <a id="btnOrderDirectUpi" href="#" class="btn-upi-app-direct">
           <span>📲</span> <span>Pay Directly via Any UPI App</span>
         </a>
+
+        <!-- Copy UPI ID Fallback Button -->
+        <button type="button" class="btn-copy-upi" onclick="copyStoreUpiId()">
+          <span>📋</span> <span id="copyUpiTextOrder">Copy UPI ID (<b class="liveUpiText">2038@upi</b>)</span>
+        </button>
 
         <div style="background:white; padding:10px; border-radius:12px; display:inline-block; margin-bottom:8px; box-shadow: 0 4px 14px rgba(0,0,0,0.1);">
           <img id="orderQrImg" src="" alt="Scan to Pay" style="width:160px; height:160px; object-fit:contain; display:block;" />
@@ -1456,6 +1482,11 @@
         <span>📲</span> <span>Pay Directly via Any UPI App</span>
       </a>
 
+      <!-- Copy UPI ID Fallback Button for Grid -->
+      <button type="button" class="btn-copy-upi" style="background:rgba(255,255,255,0.08); color:#fff; border-color:rgba(255,255,255,0.15);" onclick="copyStoreUpiId()">
+        <span>📋</span> <span id="copyUpiTextGrid">Copy UPI ID (<b class="liveUpiText">2038@upi</b>)</span>
+      </button>
+
       <div style="background:white; padding:10px; border-radius:14px; display:inline-block; margin-bottom:14px; box-shadow:0 8px 24px rgba(0,0,0,0.5);">
         <img id="upiQrImage" src="" alt="Auto-Amount UPI QR" style="width:170px; height:170px; object-fit:contain; display:block;" />
       </div>
@@ -1612,13 +1643,23 @@
       }
     }
 
+    // Clean Standard P2P Deep Link (Bina security flag trigger kiye)
     function getUpiDeepLink(amount, note) {
-      return `upi://pay?pa=${activeUpiId}&pn=2038&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      return `upi://pay?pa=${encodeURIComponent(activeUpiId)}&pn=Priyanshu%20Prasad&am=${amount}&cu=INR`;
     }
 
     function generateDynamicUpiQrUrl(amount, note) {
       const upiDeepLink = getUpiDeepLink(amount, note);
       return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiDeepLink)}`;
+    }
+
+    function copyStoreUpiId() {
+      if (!activeUpiId) return;
+      navigator.clipboard.writeText(activeUpiId).then(() => {
+        alert(`✅ Copied UPI ID: ${activeUpiId}\n\nAb PhonePe, GPay ya Paytm me jaa kar 'To UPI ID' select karke transfer kar sakte hain!`);
+      }).catch(() => {
+        prompt('Copy your UPI ID:', activeUpiId);
+      });
     }
 
     function detectCustomerGps() {
@@ -2520,7 +2561,7 @@
       const qrImg = document.getElementById('upiQrImage');
       qrImg.src = generateDynamicUpiQrUrl(total, note);
 
-      // 1-Click direct UPI App button link
+      // Clean Standard 1-Click direct UPI App button link
       const directGridBtn = document.getElementById('btnGridDirectUpi');
       if (directGridBtn) {
         directGridBtn.href = getUpiDeepLink(total, note);
