@@ -7,7 +7,7 @@
   
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#00c853" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -678,6 +678,25 @@
       box-shadow: none;
     }
 
+    .btn-upi-app-direct {
+      width: 100%;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    }
+
     .btn-gps-locate {
       width: 100%;
       background: rgba(0, 200, 83, 0.1);
@@ -993,7 +1012,7 @@
 
   <div class="mobile-bottom-bar">
     <button class="bottom-nav-item active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-      <span>🛍️</span><span>Store</span>
+      <span>🛍️️</span><span>Store</span>
     </button>
     <button class="bottom-nav-item" onclick="openModal('gridStockModal')">
       <span>📈</span><span>Invest</span>
@@ -1101,12 +1120,18 @@
       <div class="pay-method-box" id="optUPI" onclick="selectPayMethod('UPI_QR')">
         <input type="radio" name="payOpt" id="radioUPI" style="accent-color: var(--primary); width:16px; height:16px;" />
         <div>
-          <div class="pay-method-title">Pay via Auto-Amount QR</div>
-          <div class="pay-method-desc" style="font-size: 11px; color: var(--text-muted);">Instant scan with GPay / PhonePe</div>
+          <div class="pay-method-title">Pay via UPI QR / Direct App</div>
+          <div class="pay-method-desc" style="font-size: 11px; color: var(--text-muted);">Auto amount QR or 1-click GPay / PhonePe</div>
         </div>
       </div>
 
       <div id="orderUpiBox" style="display:none; background:var(--border-subtle); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:16px; text-align:center; margin:10px 0;">
+        
+        <!-- Direct 1-Click UPI Payment Button -->
+        <a id="btnOrderDirectUpi" href="#" class="btn-upi-app-direct">
+          <span>📲</span> <span>Pay Directly via Any UPI App</span>
+        </a>
+
         <div style="background:white; padding:10px; border-radius:12px; display:inline-block; margin-bottom:8px; box-shadow: 0 4px 14px rgba(0,0,0,0.1);">
           <img id="orderQrImg" src="" alt="Scan to Pay" style="width:160px; height:160px; object-fit:contain; display:block;" />
         </div>
@@ -1219,7 +1244,7 @@
       </div>
 
       <div style="font-size:11px; font-weight:900; color:var(--text-muted); margin-bottom:4px;">ENTER WITHDRAWAL AMOUNT (₹):</div>
-      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="Amount (e.g. 100)" />
+      <input type="number" id="withdrawAmountInput" class="input-field" placeholder="Amount (e.g. 2000)" />
 
       <div style="font-size:11px; font-weight:900; color:var(--text-muted); margin:10px 0 6px;">SELECT PAYOUT METHOD:</div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
@@ -1363,7 +1388,7 @@
     </div>
   </div>
 
-  <!-- Grid Stock Drawer -->
+  <!-- Grid Stock Drawer (₹2000/Block) -->
   <div id="gridStockModal" class="drawer-overlay">
     <div class="drawer-content" style="background:#060913; color:white;">
       <div class="drawer-header" style="border-color:rgba(255,255,255,0.08);">
@@ -1389,7 +1414,7 @@
       </div>
 
       <div style="display:flex; justify-content:space-between; margin-bottom:14px; font-size:12px; color:#94a3b8; font-weight:700; background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:10px;">
-        <div>Price: <b style="color:var(--accent-gold);">₹100/Box</b></div>
+        <div>Price: <b style="color:var(--accent-gold);">₹2,000/Block</b></div>
         <div>Total: <b>100 Blocks</b></div>
         <div>Available: <b id="availBoxesCount" style="color:var(--primary);">--</b></div>
       </div>
@@ -1415,7 +1440,7 @@
       </div>
 
       <button class="btn-primary" style="background:linear-gradient(135deg, var(--accent-gold), #ff8f00); color:#000; box-shadow:0 8px 24px rgba(255,171,0,0.3); margin-top:14px;" onclick="proceedToGridPayment()">
-        Proceed to Pay via Auto-Amount QR
+        Proceed to Pay via Auto-Amount QR / UPI
       </button>
     </div>
   </div>
@@ -1423,8 +1448,13 @@
   <div id="gridPaymentModal" class="drawer-overlay">
     <div class="drawer-content" style="background:#060913; color:white; text-align:center;">
       <div style="font-size:28px; margin-bottom:6px;">📲</div>
-      <h3 style="font-size:18px; font-weight:900; color:var(--accent-gold);">Scan QR to Invest</h3>
+      <h3 style="font-size:18px; font-weight:900; color:var(--accent-gold);">Scan QR / Open UPI App</h3>
       <p style="font-size:12px; color:#94a3b8; font-weight:600; margin-bottom:16px;">Amount is pre-filled upon scanning:</p>
+
+      <!-- Direct 1-Click UPI Payment Button for Stock Investment -->
+      <a id="btnGridDirectUpi" href="#" class="btn-upi-app-direct" style="background: linear-gradient(135deg, var(--accent-gold) 0%, #d97706 100%); color: #000;">
+        <span>📲</span> <span>Pay Directly via Any UPI App</span>
+      </a>
 
       <div style="background:white; padding:10px; border-radius:14px; display:inline-block; margin-bottom:14px; box-shadow:0 8px 24px rgba(0,0,0,0.5);">
         <img id="upiQrImage" src="" alt="Auto-Amount UPI QR" style="width:170px; height:170px; object-fit:contain; display:block;" />
@@ -1582,8 +1612,12 @@
       }
     }
 
+    function getUpiDeepLink(amount, note) {
+      return `upi://pay?pa=${activeUpiId}&pn=2038&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+    }
+
     function generateDynamicUpiQrUrl(amount, note) {
-      const upiDeepLink = `upi://pay?pa=${activeUpiId}&pn=2038&am=${amount}&cu=INR&tn=${encodeURIComponent(note)}`;
+      const upiDeepLink = getUpiDeepLink(amount, note);
       return `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiDeepLink)}`;
     }
 
@@ -1921,6 +1955,13 @@
         const qr = document.getElementById('orderQrImg');
         qr.src = generateDynamicUpiQrUrl(finalPayable, '2038 Store Order');
         document.getElementById('orderScanAmountText').textContent = `Scan to Pay ₹${finalPayable}`;
+        
+        // 1-Click UPI Intent Link
+        const directBtn = document.getElementById('btnOrderDirectUpi');
+        if (directBtn) {
+          directBtn.href = getUpiDeepLink(finalPayable, '2038 Store Order');
+        }
+
         document.getElementById('btnPlaceOrderFinal').textContent = isStoreOpen ? `Pay ₹${finalPayable} & Submit UTR` : 'Store Currently Closed';
       } else {
         document.getElementById('btnPlaceOrderFinal').textContent = isStoreOpen ? `Place COD Order (₹${finalPayable})` : 'Store Currently Closed';
@@ -1956,6 +1997,12 @@
         const qr = document.getElementById('orderQrImg');
         qr.src = generateDynamicUpiQrUrl(finalPayable, '2038 Store Order');
         document.getElementById('orderScanAmountText').textContent = `Scan to Pay ₹${finalPayable}`;
+        
+        const directBtn = document.getElementById('btnOrderDirectUpi');
+        if (directBtn) {
+          directBtn.href = getUpiDeepLink(finalPayable, '2038 Store Order');
+        }
+
         document.getElementById('orderUtrInput').value = '';
         btn.textContent = isStoreOpen ? `Pay ₹${finalPayable} & Submit UTR` : 'Store Currently Closed';
       }
@@ -2038,13 +2085,12 @@
         if (userOwnedBoxesCache.length > 0) {
           box.style.display = 'block';
           
-          const invested = data.totalInvested !== undefined ? data.totalInvested : (userOwnedBoxesCache.length * 100);
+          const invested = data.totalInvested !== undefined ? data.totalInvested : (userOwnedBoxesCache.length * 2000);
           const earned = data.totalCurrentEarnings !== undefined ? data.totalCurrentEarnings : 0;
           const portfolioVal = data.totalPortfolioValue !== undefined ? data.totalPortfolioValue : (invested + earned);
           const withdrawable = data.availableProfitBalance !== undefined ? data.availableProfitBalance : 0;
           const rateText = data.totalDailyYield || '50% Split';
 
-          // Zero undefined binding
           document.getElementById('profTotalInvested').textContent = `₹${invested}`;
           document.getElementById('profDailyRate').textContent = rateText;
           document.getElementById('profTotalEarned').textContent = `₹${earned}`;
@@ -2053,7 +2099,6 @@
           }
           document.getElementById('profAvailableProfit').textContent = `₹${withdrawable}`;
 
-          // Status & 1-Week Lock Badge & Notice
           const batchBadge = document.getElementById('profBatchBadge');
           const notice = document.getElementById('profCycleNotice');
           const withdrawBtn = document.getElementById('btnTriggerWithdrawal');
@@ -2382,7 +2427,6 @@
         allGridBoxes = data.boxes || [];
         document.getElementById('availBoxesCount').textContent = allGridBoxes.filter(b => b.status === 'available').length;
 
-        // Quick stats check
         if (currentUser && currentUser.phone) {
           const portRes = await fetch(`${API_URL}/grid/my-portfolio?phone=${currentUser.phone}`);
           const portData = await portRes.json();
@@ -2410,7 +2454,7 @@
           cell.className = `grid-cell ${statusClass}`;
           cell.textContent = `#${b.boxNumber}`;
           
-          let title = `Block #${b.boxNumber} (₹100)`;
+          let title = `Block #${b.boxNumber} (₹2,000)`;
           if (isOwned) title = `Owned by ${b.ownerName}`;
           if (isPending) title = `Under review (${b.ownerName})`;
           cell.title = title;
@@ -2454,7 +2498,8 @@
     function updateSelectedStockSummary() {
       const count = selectedBoxes.length;
       document.getElementById('selectedBoxesText').textContent = count > 0 ? selectedBoxes.map(n => `#${n}`).join(', ') : 'None';
-      document.getElementById('stockTotalPrice').textContent = `₹${count * 100}`;
+      // ₹2000 per block
+      document.getElementById('stockTotalPrice').textContent = `₹${count * 2000}`;
     }
 
     function proceedToGridPayment() {
@@ -2467,11 +2512,19 @@
         return;
       }
 
-      const total = selectedBoxes.length * 100;
+      // ₹2000 per block
+      const total = selectedBoxes.length * 2000;
       document.getElementById('qrAmountDisplay').textContent = `Amount: ₹${total}`;
 
+      const note = `2038 Stock Blocks ${selectedBoxes.join(',')}`;
       const qrImg = document.getElementById('upiQrImage');
-      qrImg.src = generateDynamicUpiQrUrl(total, `2038 Stock Blocks ${selectedBoxes.join(',')}`);
+      qrImg.src = generateDynamicUpiQrUrl(total, note);
+
+      // 1-Click direct UPI App button link
+      const directGridBtn = document.getElementById('btnGridDirectUpi');
+      if (directGridBtn) {
+        directGridBtn.href = getUpiDeepLink(total, note);
+      }
 
       document.getElementById('utrNumberInput').value = '';
       openModal('gridPaymentModal');

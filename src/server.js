@@ -83,7 +83,7 @@ const User = mongoose.model('User', userSchema);
 
 const gridBoxSchema = new mongoose.Schema({
   boxNumber: { type: Number, required: true, unique: true },
-  price: { type: Number, default: 100 },
+  price: { type: Number, default: 2000 },
   status: { type: String, default: 'available' }, // available, pending, owned
   ownerPhone: { type: String, default: null },
   ownerName: { type: String, default: null },
@@ -216,10 +216,13 @@ async function initializeDefaults() {
     if (boxCount === 0) {
       const boxes = [];
       for (let i = 1; i <= 100; i++) {
-        boxes.push({ boxNumber: i, price: 100, status: 'available' });
+        boxes.push({ boxNumber: i, price: 2000, status: 'available' });
       }
       await GridBox.insertMany(boxes);
-      console.log('📈 100 Grid Stock Blocks Initialized');
+      console.log('📈 100 Grid Stock Blocks Initialized at ₹2000 each');
+    } else {
+      // Sync available boxes to 2000
+      await GridBox.updateMany({ status: 'available' }, { $set: { price: 2000 } });
     }
 
     const pinCount = await Pincode.countDocuments();
@@ -433,16 +436,17 @@ app.post('/api/rider/login', async (req, res) => {
 });
 
 // ==========================================
-// 5. CROWD MANUFACTURING, 50-50 PROFIT & WITHDRAWAL ENGINE
+// 5. CROWD MANUFACTURING (₹2000/BLOCK)
 // ==========================================
 
-// Customer Portfolio API (Exact mapping for Total Value, Withdrawable, and 1-Week Holding)
+// Customer Portfolio API
 app.get('/api/grid/my-portfolio', async (req, res) => {
   try {
     const phone = String(req.query.phone || '').trim();
     const boxes = await GridBox.find({ ownerPhone: phone, status: 'owned' }).sort({ boxNumber: 1 });
 
-    const totalInvested = boxes.length * 100;
+    // Each box is ₹2000
+    const totalInvested = boxes.length * 2000;
     const batchCfg = await Config.findOne({ key: 'production_batch_status' });
     const currentBatchStatus = batchCfg ? batchCfg.value : 'POOLED';
 
@@ -459,14 +463,12 @@ app.get('/api/grid/my-portfolio', async (req, res) => {
       }
     });
 
-    // Check past approved withdrawals
     const pastWithdrawals = await WithdrawalRequest.find({ phone, status: 'Approved' });
     let alreadyWithdrawn = 0;
     pastWithdrawals.forEach(w => {
       alreadyWithdrawn += (w.amount || 0);
     });
 
-    // 1-Week (7-Day) Holding Period Calculation
     let daysHeld = 0;
     let isWeekCompleted = false;
     if (earliestPurchase) {
@@ -482,17 +484,14 @@ app.get('/api/grid/my-portfolio', async (req, res) => {
     let statusMessage = '';
 
     if (currentBatchStatus === 'POOLED') {
-      // Stage 1: Manufacturing shuru nahi hui - Customer ka Capital 100% withdrawable hai
       isWithdrawable = totalInvested > alreadyWithdrawn;
       availableProfitBalance = Math.max(0, totalInvested - alreadyWithdrawn);
       statusMessage = 'Capital Pooled: Product manufacturing not started yet. 100% Refundable anytime.';
     } else if (currentBatchStatus === 'IN_PRODUCTION') {
-      // Stage 2: Product manufacturing active - funds locked
       isWithdrawable = false;
       availableProfitBalance = 0;
       statusMessage = 'In Production / Manufacturing Active: Funds actively deployed for product batch. Payout unlocks post-sales.';
     } else if (currentBatchStatus === 'SETTLED') {
-      // Stage 3: Product sold - 50-50 profit split + 7-day holding rule
       const fullPortfolioNet = (totalInvested + totalCustomerProfit) - alreadyWithdrawn;
       if (isWeekCompleted) {
         isWithdrawable = fullPortfolioNet > 0;
@@ -511,6 +510,7 @@ app.get('/api/grid/my-portfolio', async (req, res) => {
       success: true,
       boxes,
       totalBlocks: boxes.length,
+      boxPrice: 2000,
       totalInvested: totalInvested,
       totalDailyYield: '50% Split',
       totalCurrentEarnings: totalCustomerProfit,
@@ -536,7 +536,7 @@ app.get('/api/grid/my-portfolio', async (req, res) => {
   }
 });
 
-// Admin Controls Batch Cycle (Start Production, Settle 50-50 Profit, Reset)
+// Admin Controls Batch Cycle
 app.post('/api/admin/grid/update-batch-stage', verifyAdminToken, async (req, res) => {
   try {
     const { action, totalBatchProfit } = req.body;
@@ -552,7 +552,6 @@ app.post('/api/admin/grid/update-batch-stage', verifyAdminToken, async (req, res
       const ownedBoxes = await GridBox.find({ status: 'owned' });
       if (ownedBoxes.length === 0) return res.status(400).json({ success: false, message: 'No active stock holders to share profit.' });
 
-      // 50% Company, 50% Customer Split
       const customerPoolShare = profitNum / 2;
       const profitPerBox = Math.round((customerPoolShare / ownedBoxes.length) * 100) / 100;
 
@@ -587,7 +586,7 @@ app.get('/api/grid/boxes', async (req, res) => {
   try {
     const boxes = await GridBox.find({}).sort({ boxNumber: 1 });
     const batchCfg = await Config.findOne({ key: 'production_batch_status' });
-    res.json({ success: true, total: boxes.length, boxes, currentBatchStatus: batchCfg ? batchCfg.value : 'POOLED' });
+    res.json({ success: true, total: boxes.length, boxes, boxPrice: 2000, currentBatchStatus: batchCfg ? batchCfg.value : 'POOLED' });
   } catch (err) { res.status(500).json({ success: false }); }
 });
 
@@ -606,9 +605,12 @@ app.post('/api/grid/request-buy', async (req, res) => {
     const unavailable = await GridBox.find({ boxNumber: { $in: boxNumbers }, status: { $ne: 'available' } });
     if (unavailable.length > 0) return res.status(400).json({ success: false, message: 'Selected block is unavailable.' });
 
+    // Each block is ₹2000
+    const totalAmount = boxNumbers.length * 2000;
+
     await GridBox.updateMany(
       { boxNumber: { $in: boxNumbers } },
-      { $set: { status: 'pending', ownerPhone: user.phone, ownerName: user.name, utrNumber: cleanUtr } }
+      { $set: { status: 'pending', ownerPhone: user.phone, ownerName: user.name, utrNumber: cleanUtr, price: 2000 } }
     );
 
     const requestId = `REQ-${Date.now().toString().slice(-6)}`;
@@ -617,7 +619,7 @@ app.post('/api/grid/request-buy', async (req, res) => {
       phone: user.phone,
       customerName: user.name,
       boxNumbers,
-      totalAmount: boxNumbers.length * 100,
+      totalAmount,
       utrNumber: cleanUtr,
       status: 'Pending'
     });
@@ -641,7 +643,7 @@ app.post('/api/grid/requests/approve', verifyAdminToken, async (req, res) => {
 
     await GridBox.updateMany(
       { boxNumber: { $in: request.boxNumbers } },
-      { $set: { status: 'owned', ownerPhone: request.phone, ownerName: request.customerName, utrNumber: request.utrNumber, boughtAt: new Date() } }
+      { $set: { status: 'owned', ownerPhone: request.phone, ownerName: request.customerName, utrNumber: request.utrNumber, price: 2000, boughtAt: new Date() } }
     );
 
     request.status = 'Approved';
@@ -658,7 +660,7 @@ app.post('/api/grid/requests/reject', verifyAdminToken, async (req, res) => {
 
     await GridBox.updateMany(
       { boxNumber: { $in: request.boxNumbers } },
-      { $set: { status: 'available', ownerPhone: null, ownerName: null, utrNumber: null, boughtAt: null } }
+      { $set: { status: 'available', ownerPhone: null, ownerName: null, utrNumber: null, boughtAt: null, price: 2000 } }
     );
 
     request.status = 'Rejected';
@@ -672,7 +674,7 @@ app.post('/api/grid/revoke-box', verifyAdminToken, async (req, res) => {
     const { boxNumber } = req.body;
     await GridBox.findOneAndUpdate(
       { boxNumber: Number(boxNumber) },
-      { status: 'available', ownerPhone: null, ownerName: null, utrNumber: null, boughtAt: null, batchProfitShare: 0 }
+      { status: 'available', ownerPhone: null, ownerName: null, utrNumber: null, boughtAt: null, batchProfitShare: 0, price: 2000 }
     );
     res.json({ success: true, message: `Block #${boxNumber} revoked.` });
   } catch (err) { res.status(500).json({ success: false }); }
