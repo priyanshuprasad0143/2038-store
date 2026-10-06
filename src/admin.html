@@ -207,6 +207,7 @@
     .btn-danger:hover { background: var(--danger); color: #fff; }
     .btn-success { background: #065f46; border: 1px solid #047857; color: #a7f3d0; }
     .btn-success:hover { background: var(--brand-green); color: #fff; }
+    .btn-warn { background: #854d0e; border: 1px solid #a16207; color: #fef08a; }
     .btn-print { background: #1e293b; border: 1px solid #334155; color: #38bdf8; }
     .btn-print:hover { background: #0284c7; color: #fff; }
     .btn-wa { background: #064e3b; border: 1px solid #047857; color: #6ee7b7; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
@@ -295,7 +296,7 @@
         <button class="nav-btn" onclick="switchTab('couponsTab', this)">🏷️ Promo Codes</button>
         <button class="nav-btn" onclick="switchTab('productsTab', this)">🛍 Catalog</button>
         <button class="nav-btn" onclick="switchTab('pincodesTab', this)">📍 Postal Hubs</button>
-        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Grid Stock & Payouts</button>
+        <button class="nav-btn" onclick="switchTab('gridTab', this)">📈 Crowd Manufacturing & Payouts</button>
         <button class="nav-btn" onclick="switchTab('settingsTab', this)">⚙ Settings</button>
       </div>
 
@@ -378,6 +379,33 @@
 
       <!-- Tab 5: Grid Stock & Payouts -->
       <div id="gridTab" class="panel-section">
+        
+        <!-- BATCH MANUFACTURING CONTROLLER -->
+        <div class="panel-card" style="border: 1.5px dashed var(--brand-green); background: rgba(16, 185, 129, 0.05);">
+          <div class="panel-header">
+            <span>🏭 Production Batch Lifecycle & 50-50 Profit Split</span>
+            <span id="currentBatchBadge" style="font-size:11px; padding:3px 8px; border-radius:12px; background:rgba(248, 203, 70, 0.2); color:var(--brand-yellow); font-weight:800;">
+              STATUS: POOLED
+            </span>
+          </div>
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px; line-height:1.5;">
+            • <b>Capital Pooled:</b> Customer funds are pooled and 100% refundable anytime.<br>
+            • <b>In Production:</b> Funds deployed for manufacturing; withdrawals locked 🔒.<br>
+            • <b>Batch Settled:</b> Declare total sales profit; 50% automatically shared with investors!
+          </p>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+            <button class="btn-action btn-warn" style="padding:10px;" onclick="triggerBatchStage('START_PRODUCTION')">
+              🔒 Start Production (Lock Funds)
+            </button>
+            <button class="btn-action btn-success" style="padding:10px;" onclick="promptSettleProfit()">
+              💰 Settle Sales (50-50 Profit Split)
+            </button>
+            <button class="btn-action" style="padding:10px;" onclick="triggerBatchStage('RESET_TO_POOL')">
+              🔄 Reset to Pooled (Open Withdrawals)
+            </button>
+          </div>
+        </div>
+
         <div class="panel-card">
           <div class="panel-header">Store UPI Identifier Configuration</div>
           <div style="display:flex; gap:8px;">
@@ -386,16 +414,7 @@
           </div>
         </div>
 
-        <div class="panel-card">
-          <div class="panel-header">Daily Profit Return Rate (% per day)</div>
-          <div style="display:flex; gap:8px;">
-            <input type="number" id="dailyProfitRateInput" class="input-field" placeholder="e.g. 2 for 2% daily" step="0.1" style="margin-bottom:0;" />
-            <button class="btn-submit" style="width:auto; padding:0 16px;" onclick="saveDailyProfitRate()">Update Rate</button>
-          </div>
-          <div style="font-size:11px; color:var(--text-muted); margin-top:6px;">All investors will earn this daily percentage profit on their total block holdings.</div>
-        </div>
-
-        <!-- NEW: Pending Customer Withdrawals -->
+        <!-- Pending Customer Withdrawals -->
         <div class="panel-card" style="border:1.5px solid var(--brand-yellow);">
           <div class="panel-header">
             <span style="color:var(--brand-yellow);">💸 Customer Withdrawal Requests</span>
@@ -413,9 +432,7 @@
         </div>
 
         <div class="panel-card">
-          <div class="panel-header">
-            <span>Verified Stock Holders</span>
-          </div>
+          <div class="panel-header">Verified Stock Holders</div>
           <div id="gridStockInvestorsContainer">Loading ownership records...</div>
         </div>
       </div>
@@ -570,7 +587,6 @@
       fetchGridDetails();
       fetchWithdrawalRequests();
       loadAdminUpi();
-      loadDailyProfitRate();
       loadStoreHelpline();
 
       setInterval(pollForNewOrders, 5000);
@@ -681,31 +697,29 @@
       } catch (e) { alert('Failed to save UPI identifier.'); }
     }
 
-    async function loadDailyProfitRate() {
+    // BATCH LIFECYCLE CONTROLS
+    async function triggerBatchStage(action, totalProfit = 0) {
       try {
-        const res = await fetch(`${API_URL}/config/daily-rate`);
-        const data = await res.json();
-        document.getElementById('dailyProfitRateInput').value = data.rate || 2;
-      } catch (e) {}
-    }
-
-    async function saveDailyProfitRate() {
-      const rate = document.getElementById('dailyProfitRateInput').value;
-      if (!rate || rate <= 0) return alert('Please enter a valid daily rate percentage.');
-
-      try {
-        const res = await fetch(`${API_URL}/admin/config/daily-rate`, {
+        const res = await fetch(`${API_URL}/admin/grid/update-batch-stage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
-          body: JSON.stringify({ rate: Number(rate) })
+          body: JSON.stringify({ action, totalBatchProfit: totalProfit })
         });
         const data = await res.json();
-        if (data.success) alert('Daily profit rate updated successfully!');
-        else alert(data.message);
-      } catch (e) { alert('Failed to save rate.'); }
+        alert(data.message);
+        fetchGridDetails();
+      } catch (e) { alert('Failed to update batch cycle.'); }
     }
 
-    // NEW: Customer Withdrawal Management
+    function promptSettleProfit() {
+      const profit = prompt('Enter Total Batch Net Profit (in ₹) earned from sales:');
+      if (!profit || isNaN(profit) || Number(profit) <= 0) return alert('Please enter a valid profit amount.');
+      if (confirm(`Total Profit: ₹${profit}\n50% (₹${profit/2}) will be shared with investors.\nConfirm settlement?`)) {
+        triggerBatchStage('SETTLE_PROFIT', Number(profit));
+      }
+    }
+
+    // WITHDRAWALS MANAGEMENT
     async function fetchWithdrawalRequests() {
       const container = document.getElementById('pendingWithdrawalsContainer');
       try {
@@ -752,7 +766,7 @@
               </div>
               <div style="text-align:right;">
                 <div style="font-size:15px; font-weight:900; color:var(--brand-yellow);">₹${w.amount}</div>
-                <span style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(248, 203, 70, 0.15); color:var(--brand-yellow); font-weight:800;">${w.type || 'PROFIT'}</span>
+                <span style="font-size:10px; padding:2px 6px; border-radius:6px; background:rgba(248, 203, 70, 0.15); color:var(--brand-yellow); font-weight:800;">${w.withdrawalType || 'PAYOUT'}</span>
               </div>
             </div>
 
@@ -1193,13 +1207,32 @@
       if (data.success) fetchPincodes();
     }
 
-    // Grid Stock Verification
+    // Grid Stock & Batch Lifecycle Details
     async function fetchGridDetails() {
-      const pendingContainer = document.getElementById('pendingUtrContainer');
       try {
+        const res = await fetch(`${API_URL}/grid/boxes`);
+        const data = await res.json();
+        
+        const badge = document.getElementById('currentBatchBadge');
+        if (badge) {
+          const st = data.currentBatchStatus || 'POOLED';
+          badge.textContent = `STATUS: ${st}`;
+          if (st === 'IN_PRODUCTION') {
+            badge.style.background = 'rgba(239, 68, 68, 0.2)';
+            badge.style.color = '#ef4444';
+          } else if (st === 'SETTLED') {
+            badge.style.background = 'rgba(255, 171, 0, 0.2)';
+            badge.style.color = 'var(--brand-yellow)';
+          } else {
+            badge.style.background = 'rgba(16, 185, 129, 0.2)';
+            badge.style.color = 'var(--brand-green)';
+          }
+        }
+
         const resReq = await fetch(`${API_URL}/grid/requests`, { headers: { 'x-admin-token': adminToken } });
         const dataReq = await resReq.json();
         const pendingRequests = (dataReq.requests || []).filter(r => r.status === 'Pending');
+        const pendingContainer = document.getElementById('pendingUtrContainer');
 
         if (pendingRequests.length === 0) {
           pendingContainer.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No pending UTR verification requests.</p>';
@@ -1222,37 +1255,30 @@
             pendingContainer.appendChild(card);
           });
         }
-      } catch (e) {
-        pendingContainer.innerHTML = '<p style="color:red; font-size:12px;">Error retrieving UTR requests.</p>';
-      }
 
-      const c = document.getElementById('gridStockInvestorsContainer');
-      const res = await fetch(`${API_URL}/grid/boxes`);
-      const data = await res.json();
-      const boxes = data.boxes || [];
-
-      const owned = boxes.filter(b => b.status === 'owned');
-      if (owned.length === 0) {
-        c.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No verified block allocations recorded.</p>';
-        return;
-      }
-
-      let html = `<p style="font-weight:800; margin-bottom:8px; font-size:12px; color:var(--brand-yellow);">Allocated: ${owned.length} / 100 Blocks (Capital: ₹${owned.length * 100})</p>`;
-      owned.forEach(b => {
-        html += `
-          <div style="background:var(--inner-card); padding:8px 10px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; font-size:11px; border:1px solid var(--border);">
-            <div>
-              <b>#${b.boxNumber}</b> — ${b.ownerName}
-              <div style="color:var(--text-muted); font-size:10px;">UTR: ${b.utrNumber || 'N/A'}</div>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="color:var(--brand-green); font-weight:800;">₹100</span>
-              <button class="btn-delete-icon" title="Revoke" onclick="revokeBoxOwnership(${b.boxNumber})">🗑</button>
-            </div>
-          </div>
-        `;
-      });
-      c.innerHTML = html;
+        const c = document.getElementById('gridStockInvestorsContainer');
+        const owned = (data.boxes || []).filter(b => b.status === 'owned');
+        if (owned.length === 0) {
+          c.innerHTML = '<p style="color:var(--text-muted); font-size:12px;">No verified block allocations recorded.</p>';
+        } else {
+          let html = `<p style="font-weight:800; margin-bottom:8px; font-size:12px; color:var(--brand-yellow);">Allocated: ${owned.length} / 100 Blocks (Capital: ₹${owned.length * 100})</p>`;
+          owned.forEach(b => {
+            html += `
+              <div style="background:var(--inner-card); padding:8px 10px; border-radius:6px; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; font-size:11px; border:1px solid var(--border);">
+                <div>
+                  <b>#${b.boxNumber}</b> — ${b.ownerName}
+                  <div style="color:var(--text-muted); font-size:10px;">UTR: ${b.utrNumber || 'N/A'}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <span style="color:var(--brand-green); font-weight:800;">₹100 (Profit: ₹${b.batchProfitShare || 0})</span>
+                  <button class="btn-delete-icon" title="Revoke" onclick="revokeBoxOwnership(${b.boxNumber})">🗑</button>
+                </div>
+              </div>
+            `;
+          });
+          c.innerHTML = html;
+        }
+      } catch (e) { console.error(e); }
     }
 
     async function approveUtrRequest(requestId) {
